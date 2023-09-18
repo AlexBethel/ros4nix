@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# TODO: this script shouldn't restart ROS units that haven't changed.
+
+shopt -s nullglob
+
+print_help () {
+    echo -n "ros4nix: a simple tool for managing ROS via Nix without NixOS.
+
+Usage: $0 <operation> [arguments ...]
+
+Supported operations are:
+
+  switch        Install and activate a configuration. This is the most
+                common operation, and is intended to be idempotent and
+                reversible.
+
+  activate      Re-activate the currently-installed system. This should
+                (almost) never have to be run manually as it is run
+                automatically by the 'switch' operation. Just makes
+                sure the ROS installation is consistent.
+
+  check         Performs a basic analysis to check that a configuration
+                is OK without actually installing it.
+
+  boot          Activates the given configuration file and ensures that
+                all services will run at the next system reboot, but
+                does not actually start any services.
+
+  reset         Uninstalls the ros4nix subsystem, while leaving the ROS
+                rootfs directory (/var/ros) intact.
+
+  purge         Uninstalls the ros4nix subsystem and deletes the ROS
+                rootfs directory.
+
+Use $0 <operation> --help for more information.
+" > /dev/stderr
+}
+
+print_help_switch () {
+    echo -n "ros4nix switch: switch to a new configuration
+
+Usage: $0 switch <config_file>
+
+Install and activate a configuration. This is the most common
+operation in ros4nix, and is intended to be idempotent and reversible.
+" > /dev/stderr
+}
+
+print_help_activate () {
+    echo -n "ros4nix activate: re-activate the current configuration
+
+Usage: $0 activate
+
+Re-activate the currently-installed system. This should (almost) never
+have to be run manually as it is run automatically by the 'switch'
+operation. Just makes sure the ROS installation is consistent.
+" > /dev/stderr
+}
+
+print_help_check () {
+    echo -n "ros4nix check: check a configuration
+
+Usage: $0 check <config_file>
+
+Performs a basic analysis to check that a configuration is OK without
+actually installing it.
+" > /dev/stderr
+}
+
+print_help_reset () {
+    echo -n "ros4nix reset
+
+Usage: $0 reset
+
+Uninstalls the ros4nix subsystem, while leaving the ROS rootfs
+directory (/var/ros) intact.
+" > /dev/stderr
+}
+
+print_help_purge () {
+    echo -n "ros4nix purge
+
+Usage: $0 purge
+
+Uninstalls the ros4nix subsystem and deletes the ROS rootfs
+directory.
+" > /dev/stderr
+}
+
+# Checks that Nix is installed, and if not, installs it.
+check_nix () {
+    if ! [ -e /nix ]; then
+        echo 'Nix is not installed.'
+
+        if [ "$(id -u)" = 0 ]; then
+            echo 'Installing Nix as root is not allowed.'
+            echo 'Run this script as non-root.'
+        fi
+
+        echo -n 'Would you like me to install it for you [yN]?'
+        read input
+        if [ "${input,,?}" != "y" ]; then
+            echo 'Aborting.'
+            return 1
+        fi
+
+        if ! type curl > /dev/null; then
+            echo 'Curl is not installed either.'
+            if type apt > /dev/null; then
+                echo "This is an APT machine. I'm going to go ahead and install curl for you."
+                sudo apt install curl
+            else
+                echo 'Please install curl and try again.'
+                return 1
+            fi
+        fi
+
+        curl -L https://nixos.org/nix/install | sh
+    fi
+}
+
+# Build the system at from the given configuration file, and fully
+# install and activate it.
+#
+# install_system <configuration_file>
+install_system () {
+    build=$(build_system "$1")
+    echo "Built NixOS system is $build"
+
+    # Tell Nix to install the system into the ros4nix profile.
+    sudo nix-env -p /nix/var/nix/profiles/ros4nix --set "$build"
+
+    echo 'Switching to configuration...'
+    uninstall_units
+    activate_system
+    load_units
+    echo 'Activation done.'
+}
+
+# Builds the system from the configuration file, and prints out the
+# build path.
+#
+# build_system <configuration_file>
+build_system () {
+    nix-build --no-out-link -E "
+        with import <nixpkgs> {};
+        (nixos (import ./$1)).ros4nix
+    "
+}
+
+# Stop and uninstall the currently installed ROS system units, if any
+# are present.
+uninstall_units () {
+    echo 'Stopping all running ROS systemd units...'
+    for file in /etc/systemd/system/ros*.service; do
+        echo "Stopping $(basename "$file")..."
+        sudo systemctl stop $(basename "$file")
+    done
+
+    echo 'Disabling enabled ROS systemd units...'
+    for file in /etc/systemd/system/ros*.service; do
+        sudo systemctl disable $(basename "$file")
+    done
+
+    echo 'Uninstalling ROS systemd units...'
+    for file in /etc/systemd/system/ros*.service; do
+        sudo rm -v $file
+    done
+}
+
+# Activate the ROS system. This is the equivalent of a NixOS
+# activation script, and builds a new ROS rootfs in /var/ros, installs
+# software as necessary, and then compiles the catkin workspace as
+# necessary.
+activate_system () {
+    echo "Running ROS activation snippet..."
+    sudo /nix/var/nix/profiles/ros4nix/bin/activate-ros
+}
+
+# Install and start ROS units as necessary.
+load_units () {
+    src=/nix/var/nix/profiles/ros4nix
+
+    echo "Installing ROS systemd services from $src..."
+    for service in $src/etc/systemd/system/ros*.service; do
+        sudo cp -v "$service" /etc/systemd/system/
+    done
+
+    echo "Enabling necessary services..."
+    for service in $src/etc/systemd/system/multi-user.target.wants/ros*.service; do
+        echo "Enabling $(basename "$service")..."
+        sudo systemctl enable $(basename "$service")
+    done
+
+    echo "Starting necessary services..."
+    sudo systemctl start multi-user.target
+}
+
+if [ "$#" = 0 ]; then
+    print_help
+    exit 1
+fi
+
+case "$1" in
+    switch)
+        shift
+        if [ "$#" != 1 ] || [ "$1" = "--help" ]; then
+            print_help_switch
+            exit 1
+        fi
+
+        config_file="$1"
+        check_nix
+        install_system "$config_file"
+        ;;
+    activate)
+        shift
+        if [ "$#" != 0 ]; then
+            print_help_activate
+            exit 1
+        fi
+
+        activate_system
+        ;;
+    check)
+        shift
+        if [ "$#" != 1 ] || [ "$1" = "--help" ]; then
+            print_help_check
+            exit 1
+        fi
+
+        sys=$(build_system "$@")
+        echo 'OK'
+        ;;
+    boot)
+        echo 'Not implemented'
+        ;;
+    reset)
+        shift
+        if [ "$#" != 0 ]; then
+            print_help_reset
+            exit 1
+        fi
+
+        uninstall_units
+        ;;
+    purge)
+        shift
+        if [ "$#" != 0 ]; then
+            print_help_purge
+            exit 1
+        fi
+
+        uninstall_units
+        sudo rm -rf /var/ros
+        ;;
+    *)
+        print_help
+        exit 1
+        ;;
+esac

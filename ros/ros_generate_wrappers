@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+root="$1"
+target="$2"
+out="$root/nixWrappers"
+
+rm -rf $out
+mkdir -p $out
+
+neededWrappers () {
+    for f in $root/bin/catkin*; do
+        echo "$f";
+    done
+
+    for f in $root/opt/ros/**/bin/*; do
+        echo "$f";
+    done
+}
+
+for file in $(neededWrappers); do
+    outfile="$out/$(echo $file | sed 's:.*/::')"
+    ln -s "$target" "$outfile"
+done
