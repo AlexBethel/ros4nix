@@ -131,7 +131,7 @@ install_system () {
     echo "Built NixOS system is $build"
 
     # Tell Nix to install the system into the ros4nix profile.
-    sudo nix-env -p /nix/var/nix/profiles/ros4nix --set "$build"
+    sudo $(which nix-env) -p /nix/var/nix/profiles/ros4nix --set "$build"
 
     echo 'Switching to configuration...'
     uninstall_units
