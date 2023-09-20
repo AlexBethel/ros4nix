@@ -124,6 +124,9 @@ with lib;
       skippedPackages = [
         # Completely broken inside bwrap.
         "desktop-file-utils"
+
+        # Testing
+        "libc6"
       ];
 
       # Inner wrapper script for ROS programs.
