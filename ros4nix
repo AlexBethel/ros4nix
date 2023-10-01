@@ -192,11 +192,21 @@ load_units () {
     echo "Enabling necessary services..."
     for service in $src/etc/systemd/system/multi-user.target.wants/ros*.service; do
         echo "Enabling $(basename "$service")..."
-        sudo systemctl enable $(basename "$service")
+        # sudo systemctl enable $(basename "$service")
+
+        # That doesn't work because NixOS doesn't write an [Install]
+        # section of its services; it's not a problem on NixOS because
+        # Nix installs services rather than systemd, so we're gonna
+        # have to emulate Nix's behavior here instead.
+        sudo ln -s \
+             /etc/systemd/system/$(basename "$service") \
+             /etc/systemd/system/multi-user.target.wants/$(basename "$service")
     done
 
     echo "Starting necessary services..."
-    sudo systemctl start multi-user.target
+    for service in $src/etc/systemd/system/multi-user.target.wants/ros*.service; do
+        sudo systemctl start $(basename "$service")
+    done
 }
 
 # Bootstrap an Ubuntu installation into /var/ros using Docker if
@@ -272,6 +282,7 @@ case "$1" in
 
         config_file="$1"
         check_nix
+        . /etc/bashrc
         install_system "$config_file"
         ;;
     activate)

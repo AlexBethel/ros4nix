@@ -338,7 +338,8 @@ with lib;
         chrootRos
       ];
 
-      system.build.ros4nix = pkgs.symlinkJoin "ros4nix" {
+      system.build.ros4nix = pkgs.symlinkJoin {
+        name = "ros4nix";
         paths = [
           rosActivationScript
           updateRos
