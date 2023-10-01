@@ -131,10 +131,9 @@ with lib;
         #!${pkgs.bash}/bin/bash
         IFS=$'\n\t'
 
-        # . /opt/ros/**/setup.sh
         . /catkin_ws/devel/setup.sh
 
-        cat "$ARG_FILE" | xargs -0 "$PROGRAM"
+        xargs -0 -a "$ARG_FILE" "$PROGRAM"
       '';
 
       # Outer wrapper script for ROS programs.
@@ -149,6 +148,7 @@ with lib;
         done
 
         export PATH=/bin:/sbin
+        export SHELL=/bin/sh
         exec ${pkgs.bubblewrap}/bin/bwrap \
             --bind /var/ros / \
             --dev-bind /dev /dev \
@@ -158,13 +158,26 @@ with lib;
             --proc /proc \
             --bind /tmp /tmp \
             --bind /nix /nix \
-            "${wrapperInner}" # $(${pkgs.coreutils}/bin/basename "$0") "$@"
+            "${wrapperInner}"
       '';
 
       chrootRos = pkgs.writeScriptBin "chroot-ros" ''
         #!${pkgs.bash}/bin/bash
-        [ -e /tmp/bash ] || ln -s ${wrapperOuter} /tmp/bash
-        exec /tmp/bash
+
+        export PROGRAM=bash
+        export ARG_FILE=$(mktemp)
+
+        export PATH=/bin:/sbin
+        exec ${pkgs.bubblewrap}/bin/bwrap \
+            --bind /var/ros / \
+            --dev-bind /dev /dev \
+            --dev-bind /sys /sys \
+            --bind /etc/hosts /etc/hosts \
+            --bind /home /home \
+            --proc /proc \
+            --bind /tmp /tmp \
+            --bind /nix /nix \
+            "${wrapperInner}"
       '';
 
       # The stage 1 script builds a base Ubuntu installation from
@@ -275,9 +288,7 @@ with lib;
             ''
               . /opt/ros/**/setup.sh
               cd /catkin_ws
-              # catkin_make_isolated
-              # catkin_make
-              catkin build
+              catkin_make
             ''
           ]
         );
@@ -327,10 +338,8 @@ with lib;
         chrootRos
       ];
 
-      system.build.ros4nix = pkgs.symlinkJoin {
-        name = "ros4nix";
+      system.build.ros4nix = pkgs.symlinkJoin "ros4nix" {
         paths = [
-          config.system.build.etc
           rosActivationScript
           updateRos
           updateCatkin

@@ -1,0 +1,4 @@
+<launch>
+    <node name="motor_ctrl_node" pkg="motor_ctrl" type="motor_ctrl_node.py" output="screen"/>
+</launch>
+
