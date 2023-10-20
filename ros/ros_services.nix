@@ -172,7 +172,7 @@ let rosLib = import ./services/rosLib.nix; in
                     opts = rosLib.attrsToCmdLine args;
                   in
                   ''
-                    /var/ros/nixWrappers/roslaunch ${packageName} ${launchFile} ${opts}
+                    ${config.programs.ros.rootDir}/nixWrappers/roslaunch ${packageName} ${launchFile} ${opts}
                   '';
               };
             }
@@ -197,7 +197,7 @@ let rosLib = import ./services/rosLib.nix; in
                     opts = rosLib.attrsToCmdLine remap;
                   in
                   ''
-                    /var/ros/nixWrappers/rosrun ${packageName} ${executable} ${opts}
+                    ${config.programs.ros.rootDir}/nixWrappers/rosrun ${packageName} ${executable} ${opts}
                   '';
               };
             }

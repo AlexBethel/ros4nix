@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 IFS=$'\n\t'
 
 # TODO: this script shouldn't restart ROS units that haven't changed.
@@ -111,7 +111,7 @@ check_nix () {
             echo 'Curl is not installed either.'
             if type apt > /dev/null; then
                 echo "This is an APT machine. I'm going to go ahead and install curl for you."
-                sudo apt install curl
+                sudo apt install curl xz-utils
             else
                 echo 'Please install curl and try again.'
                 return 1
@@ -203,68 +203,12 @@ load_units () {
              /etc/systemd/system/multi-user.target.wants/$(basename "$service")
     done
 
+    sudo systemctl daemon-reload
+
     echo "Starting necessary services..."
     for service in $src/etc/systemd/system/multi-user.target.wants/ros*.service; do
         sudo systemctl start $(basename "$service")
     done
-}
-
-# Bootstrap an Ubuntu installation into /var/ros using Docker if
-# necessary.
-bootstrap_check () {
-    if [ $(uname -r | cut -d. -f3) -le 255 ]; then
-        # System is OK.
-        return
-    fi
-
-    echo "Kernel is so badly misconfigured bootstrapping an Ubuntu"
-    echo "installation is impossible. I'm going to ask Docker to do"
-    echo "it instead."
-    echo
-    echo "WARKING: At the moment this ONLY works for Ubuntu Focal."
-
-    if type docker > /dev/null && \
-            [ -e /etc/apt ] && \
-            ! [ -e /etc/apt/sources.list.d/docker.list ]; then
-        echo "Docker is installed, but it's done wrong."
-
-        sudo apt-get remove docker docker-engine docker.io containerd runc || true
-    fi
-
-    if ! type docker > /dev/null; then
-        echo "Docker isn't installed."
-
-        echo -n 'Would you like me to install it for you [yN]?'
-        read input
-        if [ "${input,,?}" != "y" ]; then
-            echo 'Aborting.'
-            return 1
-        fi
-
-        sudo apt-get update
-        sudo apt-get install \
-             ca-certificates \
-             curl \
-             gnupg \
-             lsb-release
-
-        sudo mkdir -p /etc/apt/keyrings
-
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-        echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-            $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-        sudo apt-get update
-
-        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    fi
-
-    echo "Docker looks like it's installed and working."
-    echo
-
-    sudo docker run -it --rm --volume /var/ros:/tmp/var ubuntu:focal /bin/sh -c 'TODO'
 }
 
 if [ "$#" = 0 ]; then
@@ -301,6 +245,7 @@ case "$1" in
             exit 1
         fi
 
+        . /etc/bashrc
         sys=$(build_system "$@")
         echo 'OK'
         ;;

@@ -12,9 +12,32 @@ with lib;
       default = false;
     };
 
+    useMainRoot = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Whether to install ROS and all related components into the
+        main current system with no sandboxing whatsoever, rather than
+        the default of generating our own rootfs and installing into
+        that using bwrap for sandboxing.
+
+        This only works if the running system is an Ubuntu or Debian
+        installation that is compatible with the ROS distribution
+        specified in programs.ros.baseImage.rosDistro, and it also
+        applies non-trivially-reversible major changes to the system.
+        For this reason it is generally advisable to use this option
+        *inside* of a Podman container (no, docker won't do because
+        we configure ROS using systemd services, so the environment
+        has to run systemd).
+      '';
+    };
+
     rootDir = mkOption {
       type = types.str;
-      default = "/var/ros";
+      default =
+        if config.programs.ros.useMainRoot
+        then ""
+        else "/var/ros";
       description = "Directory to install ROS into.";
     };
 
@@ -54,6 +77,7 @@ with lib;
       type = types.listOf types.str;
       default = [
         "deb http://packages.ros.org/ros/ubuntu ${config.programs.ros.baseImage.suite} main"
+      ] ++ (if !config.programs.ros.useMainRoot then [
         "deb ${config.programs.ros.baseImage.mirror} ${config.programs.ros.baseImage.suite}-updates main restricted"
         "deb ${config.programs.ros.baseImage.mirror} ${config.programs.ros.baseImage.suite} universe"
         "deb ${config.programs.ros.baseImage.mirror} ${config.programs.ros.baseImage.suite}-updates universe"
@@ -63,7 +87,7 @@ with lib;
         "deb ${config.programs.ros.baseImage.securityMirror} ${config.programs.ros.baseImage.suite}-security main restricted"
         "deb ${config.programs.ros.baseImage.securityMirror} ${config.programs.ros.baseImage.suite}-security universe"
         "deb ${config.programs.ros.baseImage.securityMirror} ${config.programs.ros.baseImage.suite}-security multiverse"
-      ];
+      ] else [ ]);
       description = "Extra sources to add to the Ubuntu image.";
     };
 
@@ -99,10 +123,18 @@ with lib;
       # Program to update the ROS installation.
       updateRos = pkgs.writeScriptBin "update-ros" ''
         #!${pkgs.bash}/bin/bash
+        set -e
         export PATH=/bin:/sbin
         export SHELL=/bin/sh
-        PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc /init
-        PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
+        ${if config.programs.ros.useMainRoot
+          then ''
+            /init
+            /stage3
+          '' else ''
+            PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc /init
+            PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
+          ''
+         }
       '';
 
       # Program to rebuild the ROS catkin workspace.
@@ -110,14 +142,15 @@ with lib;
         #!${pkgs.bash}/bin/bash
         export PATH=/bin:/sbin
         export SHELL=/bin/sh
-        ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
+        ${if config.programs.ros.useMainRoot
+          then ''
+            /stage3
+          ''
+          else ''
+            ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
+          ''
+         }
       '';
-
-      # # Program to enter a ROS chroot.
-      # chrootRos = pkgs.writeScriptBin "chroot-ros" ''
-      #   #!${pkgs.bash}/bin/bash
-      #   PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc /bin/bash
-      # '';
 
       # Packages that are unnecessary, and whose installation should
       # be completely skipped under all circumstances.
@@ -149,16 +182,22 @@ with lib;
 
         export PATH=/bin:/sbin
         export SHELL=/bin/sh
-        exec ${pkgs.bubblewrap}/bin/bwrap \
-            --bind /var/ros / \
-            --dev-bind /dev /dev \
-            --dev-bind /sys /sys \
-            --bind /etc/hosts /etc/hosts \
-            --bind /home /home \
-            --proc /proc \
-            --bind /tmp /tmp \
-            --bind /nix /nix \
-            "${wrapperInner}"
+        ${if config.programs.ros.useMainRoot
+          then ''
+            exec "${wrapperInner}"
+          '' else ''
+            exec ${pkgs.bubblewrap}/bin/bwrap \
+                --bind /var/ros / \
+                --dev-bind /dev /dev \
+                --dev-bind /sys /sys \
+                --bind /etc/hosts /etc/hosts \
+                --bind /home /home \
+                --proc /proc \
+                --bind /tmp /tmp \
+                --bind /nix /nix \
+                "${wrapperInner}"
+          ''
+         }
       '';
 
       chrootRos = pkgs.writeScriptBin "chroot-ros" ''
@@ -168,16 +207,22 @@ with lib;
         export ARG_FILE=$(mktemp)
 
         export PATH=/bin:/sbin
-        exec ${pkgs.bubblewrap}/bin/bwrap \
-            --bind /var/ros / \
-            --dev-bind /dev /dev \
-            --dev-bind /sys /sys \
-            --bind /etc/hosts /etc/hosts \
-            --bind /home /home \
-            --proc /proc \
-            --bind /tmp /tmp \
-            --bind /nix /nix \
-            "${wrapperInner}"
+        ${if config.programs.ros.useMainRoot
+          then ''
+            exec "${wrapperInner}"
+          '' else ''
+            exec ${pkgs.bubblewrap}/bin/bwrap \
+                --bind /var/ros / \
+                --dev-bind /dev /dev \
+                --dev-bind /sys /sys \
+                --bind /etc/hosts /etc/hosts \
+                --bind /home /home \
+                --proc /proc \
+                --bind /tmp /tmp \
+                --bind /nix /nix \
+                "${wrapperInner}"
+          ''
+         }
       '';
 
       # The stage 1 script builds a base Ubuntu installation from
@@ -188,13 +233,18 @@ with lib;
       #
       # TODO: It should theoretically also rerun whenever it changes,
       # to accomodate changes to the ROS distro option.
-      stage1Install = ''
-        ${pkgs.coreutils}/bin/mkdir ${config.programs.ros.rootDir}
-        ${pkgs.debootstrap}/bin/debootstrap \
-            ${config.programs.ros.baseImage.suite} \
-            ${config.programs.ros.rootDir} \
-            ${config.programs.ros.baseImage.mirror}
-      '';
+      stage1Install =
+        if config.programs.ros.useMainRoot
+        then ''
+          : # Do nothing
+        ''
+        else ''
+          ${pkgs.coreutils}/bin/mkdir ${config.programs.ros.rootDir}
+          ${pkgs.debootstrap}/bin/debootstrap \
+              ${config.programs.ros.baseImage.suite} \
+              ${config.programs.ros.rootDir} \
+              ${config.programs.ros.baseImage.mirror}
+        '';
 
       # The stage 2 script runs inside the container, performs a
       # system update, configures APT, and downloads all APT packages
@@ -275,15 +325,17 @@ with lib;
               PACKAGE_REPO=$(mktemp -d)
             ''
           ] ++
-          builtins.attrValues (builtins.mapAttrs (name: path:
-            ''
-              cp -r ${path} $PACKAGE_REPO/${name}
-              for f in $(find $PACKAGE_REPO/${name}); do
-                touch "$f"
-              done
-              ${pkgs.rsync}/bin/rsync -av --update $PACKAGE_REPO/${name} /catkin_ws/src/
-            ''
-          ) config.programs.ros.buildPackages) ++
+          builtins.attrValues (builtins.mapAttrs
+            (name: path:
+              ''
+                cp -r ${path} $PACKAGE_REPO/${name}
+                for f in $(find $PACKAGE_REPO/${name}); do
+                  touch "$f"
+                done
+                ${pkgs.rsync}/bin/rsync -av --update $PACKAGE_REPO/${name} /catkin_ws/src/
+              ''
+            )
+            config.programs.ros.buildPackages) ++
           [
             ''
               . /opt/ros/**/setup.sh
@@ -318,10 +370,11 @@ with lib;
           ${updateCatkin}/bin/update-catkin
         fi
 
-        PATH=${pkgs.proot}/bin:${pkgs.bash}/bin:${pkgs.gnused}/bin:${pkgs.which}/bin:$PATH ${./ros_generate_wrappers} ${config.programs.ros.rootDir} ${wrapperOuter}
+        PATH=${pkgs.proot}/bin:${pkgs.bash}/bin:${pkgs.gnused}/bin:${pkgs.which}/bin:$PATH ${./ros_generate_wrappers} "${config.programs.ros.rootDir}" ${wrapperOuter}
       '';
       rosActivationScript = pkgs.writeScriptBin "activate-ros" ''
         #!/bin/sh
+        set -e
         ${rosActivationSnippet}
       '';
     in
@@ -345,6 +398,7 @@ with lib;
           updateRos
           updateCatkin
           chrootRos
+          config.system.build.etc
         ];
       };
     };
