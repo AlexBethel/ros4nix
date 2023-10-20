@@ -139,7 +139,7 @@ let rosLib = import ./services/rosLib.nix; in
           # it starts accepting connections.
           ${config.programs.ros.rootDir}/nixWrappers/roscore &
           while true; do
-            ${pkgs.coreutils}/bin/sleep 0.1
+            ${pkgs.coreutils}/bin/sleep 2
             # Report failure if roscore isn't running anymore.
             if ! ps | grep -q xargs; then
               echo 'Failed to start roscore, retrying.'
