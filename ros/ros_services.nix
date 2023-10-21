@@ -125,6 +125,9 @@ let rosLib = import ./services/rosLib.nix; in
         "python3-catkin-tools"
       ];
 
+    })
+
+    (mkIf (config.services.ros.enable && config.programs.ros.master == null) {
       systemd.services.rosMaster = {
         wantedBy = [ "multi-user.target" ];
         path = [
@@ -165,7 +168,10 @@ let rosLib = import ./services/rosLib.nix; in
               name = "ros-${name}";
               value = {
                 wantedBy = [ "multi-user.target" ];
-                after = [ "rosMaster.service" ];
+                after =
+                  if config.programs.ros.master != null
+                  then [ "rosMaster.service" ]
+                  else [];
 
                 script =
                   let
@@ -189,7 +195,10 @@ let rosLib = import ./services/rosLib.nix; in
               name = "ros-${name}";
               value = {
                 wantedBy = [ "multi-user.target" ];
-                after = [ "rosMaster.service" ];
+                after =
+                  if config.programs.ros.master != null
+                  then [ "rosMaster.service" ]
+                  else [];
 
                 # TODO: we should use namespace here somewhere.
                 script =

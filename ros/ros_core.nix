@@ -116,6 +116,12 @@ with lib;
       default = { };
       description = "Paths to copy into /catkin_ws.";
     };
+
+    master = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Address of the default ROS master.";
+    };
   };
 
   config =
@@ -180,6 +186,12 @@ with lib;
             echo -en '\0' >> $ARG_FILE
         done
 
+        ${
+          if config.programs.ros.master != null
+            then ''export ROS_MASTER_URI=''${ROS_MASTER_URI:-http://${config.programs.ros.master}:11311}''
+            else ''''
+        }
+
         export PATH=/bin:/sbin
         export SHELL=/bin/sh
         ${if config.programs.ros.useMainRoot
@@ -205,6 +217,12 @@ with lib;
 
         export PROGRAM=bash
         export ARG_FILE=$(mktemp)
+
+        ${
+          if config.programs.ros.master != null
+            then ''export ROS_MASTER_URI=''${ROS_MASTER_URI:-http://${config.programs.ros.master}:11311}''
+            else ''''
+        }
 
         export PATH=/bin:/sbin
         ${if config.programs.ros.useMainRoot
