@@ -10,6 +10,7 @@
     ./moveBase.nix
     ./realsense.nix
     ./rosbridge.nix
+    ./testPublisher.nix
     ./usbCamera.nix
   ];
 }
