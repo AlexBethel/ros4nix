@@ -2,6 +2,7 @@
 { ... }:
 {
   imports = [
+    ./bagPlayer.nix
     ./elevationMapping.nix
     ./kindr.nix
     ./kindrRos.nix
@@ -10,6 +11,7 @@
     ./moveBase.nix
     ./realsense.nix
     ./rosbridge.nix
+    ./staticTransform.nix
     ./testPublisher.nix
     ./usbCamera.nix
   ];

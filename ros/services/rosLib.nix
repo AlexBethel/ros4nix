@@ -1,4 +1,5 @@
 # Library of functions specifically for ROS.
+{ lib, ... }:
 {
   # Convert an attrset to the `roslaunch` and `rosrun` command-line
   # format. For example, given { a = "5"; b = true; c = null; },
@@ -26,4 +27,8 @@
   # (str -> t -> u) -> attrsOf t -> [u]
   mapAttrValues = with builtins; transform: attrs:
     attrValues (mapAttrs transform attrs);
+
+  # (t -> {name: str, value: u}) -> [t] -> attrsOf u
+  mapIntoAttrs = with builtins; transform: list:
+    listToAttrs (map transform list);
 }

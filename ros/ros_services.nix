@@ -2,7 +2,7 @@
 { config, lib, pkgs, ... }:
 
 with lib;
-let rosLib = import ./services/rosLib.nix; in
+let rosLib = import ./services/rosLib.nix { inherit lib; }; in
 {
   options.services.ros = {
     enable = mkOption {
@@ -95,6 +95,14 @@ let rosLib = import ./services/rosLib.nix; in
             '';
           };
 
+          rawArgs = mkOption {
+            type = listOf str;
+            default = { };
+            description = ''
+              Raw arguments to pass to the service.
+            '';
+          };
+
           namespace = mkOption {
             type = str;
             default = "";
@@ -171,7 +179,7 @@ let rosLib = import ./services/rosLib.nix; in
                 after =
                   if config.programs.ros.master != null
                   then [ "rosMaster.service" ]
-                  else [];
+                  else [ ];
 
                 script =
                   let
@@ -190,7 +198,7 @@ let rosLib = import ./services/rosLib.nix; in
     (mkIf (config.services.ros.enable) {
       systemd.services = rosLib.mapAttrsFull
         (
-          name: { packageName, executable, remap, namespace }:
+          name: { packageName, executable, rawArgs, remap, namespace }:
             {
               name = "ros-${name}";
               value = {
@@ -198,12 +206,12 @@ let rosLib = import ./services/rosLib.nix; in
                 after =
                   if config.programs.ros.master != null
                   then [ "rosMaster.service" ]
-                  else [];
+                  else [ ];
 
                 # TODO: we should use namespace here somewhere.
                 script =
                   let
-                    opts = rosLib.attrsToCmdLine remap;
+                    opts = concatStringsSep " " rawArgs + rosLib.attrsToCmdLine remap;
                   in
                   ''
                     ${config.programs.ros.rootDir}/nixWrappers/rosrun ${packageName} ${executable} ${opts}

@@ -1,5 +1,5 @@
 { config, lib, ... }:
-let rosLib = import ./services/rosLib.nix;
+let rosLib = import ./services/rosLib.nix { inherit lib; };
 in
 {
   options = with lib; {
