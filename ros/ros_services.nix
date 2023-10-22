@@ -195,7 +195,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                     opts = rosLib.attrsToCmdLine args;
                   in
                   ''
-                    ${config.programs.ros.rootDir}/nixWrappers/roslaunch ${packageName} ${launchFile} ${opts}
+                    ${config.programs.ros.rootDir}/nixWrappers/roslaunch --wait ${packageName} ${launchFile} ${opts}
                   '';
               };
             }
