@@ -167,10 +167,10 @@ with lib;
 
       # Inner wrapper script for ROS programs.
       wrapperInner = pkgs.writeScript "wrapper-inner" ''
-        #!${pkgs.bash}/bin/bash
-        IFS=$'\n\t'
+        #!${pkgs.zsh}/bin/zsh
+        # IFS=$'\n\t'
 
-        . /catkin_ws/devel/setup.sh
+        . /catkin_ws/devel/setup.zsh
 
         xargs -0 -a "$ARG_FILE" "$PROGRAM"
       '';

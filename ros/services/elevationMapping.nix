@@ -21,13 +21,15 @@ let
       ignore_points_below = -0.5;
     };
   };
-  inputSources = rosLib.mapToAttrs
+  inputSources = rosLib.mapIntoAttrs
     (name: {
       inherit name;
       value = mkPointcloudEntry name;
     })
     pointclouds;
   mappingConfig = {
+    input_sources = inputSources;
+
     map_frame_id = "map";
     robot_base_frame_id = "base_link";
     num_callback_threads = 4;
@@ -102,9 +104,9 @@ in
         elevationMapping.build = true;
 
         runServices.elevationMapping = {
-          packageName = "elevation-mapping";
-          executable = "elevation-mapping";
-          rosParams = pkgs.writeText "elevation-mapping.yaml" (
+          packageName = "elevation_mapping";
+          executable = "elevation_mapping";
+          rosParams = pkgs.writeText "elevation_mapping.yaml" (
             # use JSON because it's a subset of YAML and easier to
             # generate from Nix.
             builtins.toJSON mappingConfig
