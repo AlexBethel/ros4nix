@@ -358,7 +358,7 @@ with lib;
             ''
               . /opt/ros/**/setup.sh
               cd /catkin_ws
-              catkin_make
+              catkin build
             ''
           ]
         );

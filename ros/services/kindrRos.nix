@@ -13,6 +13,8 @@ with lib;
   };
 
   config = (mkIf config.services.ros.libraries.kindrRos.enable {
+    services.ros.libraries.kindr.enable = true;
+
     programs.ros = {
       enable = true;
 
