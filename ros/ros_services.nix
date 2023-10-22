@@ -186,7 +186,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
               value = {
                 wantedBy = [ "multi-user.target" ];
                 after =
-                  if config.programs.ros.master != null
+                  if config.programs.ros.master == null
                   then [ "rosMaster.service" ]
                   else [ ];
 
@@ -213,7 +213,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
               value = {
                 wantedBy = [ "multi-user.target" ];
                 after =
-                  if config.programs.ros.master != null
+                  if config.programs.ros.master == null
                   then [ "rosMaster.service" ]
                   else [ ];
 
