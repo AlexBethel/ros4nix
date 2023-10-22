@@ -167,7 +167,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
             fi
 
             # Report success if roscore is accepting connections.
-            if echo exit | nc localhost 11311 > /dev/null; then
+            if echo exit | nc localhost 11311; then
               break
             fi
           done
