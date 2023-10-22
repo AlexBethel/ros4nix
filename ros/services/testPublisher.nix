@@ -21,7 +21,7 @@ with lib;
     systemd.services.ros-testPublisher = {
       wantedBy = [ "multi-user.target" ];
       after =
-        if config.programs.ros.master != null
+        if config.programs.ros.master == null
         then [ "rosMaster.service" ]
         else [ ];
 
