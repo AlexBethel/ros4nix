@@ -92,4 +92,74 @@ rebuild a ROS installation and discard all its state is to run
 
 ## Configuring
 
+See the default configuration in `sample_configuration.nix`.
+
+### Selecting a ROS distribution
+
+The ROS distribution and the Ubuntu distribution it is based on are
+both controlled using options under `programs.ros`. The defaults used
+if the options are left unspecified are:
+```nix
+{ config, pkgs, ... }:
+{
+  programs.ros.baseImage = {
+    suite = "focal";       # Ubuntu distribution
+    rosDistro = "noetic";  # ROS distribution
+  };
+}
+```
+
+### ROS Master
+
+The ROS master is controlled by the `services.ros.enable` option:
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.enable = true;
+}
+```
+This configuration will install a ROS master, and set it to start up
+at boot time. In general this should always be `true`.
+
+### Installing packages
+
+There are two ways of installing packages in `ros4nix`: general Ubuntu
+packages, and ROS-specific packages.
+```nix
+{ config, pkgs, ... }:
+{
+  programs.ros = {
+    packages = [ "tf2" ];               # Installs ros-<rosdistro>-tf2.
+    ubuntuPackages = [
+      "libpcl-dev"                      # Installs libpcl-dev.
+      "libcurses-dev"                   # Multiple packages are allowed.
+    ];
+  };
+}
+```
+
+### Remote interfacing
+
+ROS can interface with a remote machine running the ROS core:
+```nix
+{ config, pkgs, ... }:
+{
+  programs.ros = {
+    master = "1.2.3.4";
+  };
+}
+```
+If set, then the value of `services.ros.enable` is ignored; a ROS
+master is never run.
+
+This installs an extra line into the wrapper scripts generated that
+sets the `ROS_MASTER_URI` to this default machine if it is left unset
+by the used.
+
+### Scheduling `roslaunch` programs
+
+TODO
+
+### Scheduling `rosrun` programs
+
 TODO
