@@ -163,3 +163,56 @@ TODO
 ### Scheduling `rosrun` programs
 
 TODO
+
+## Macros for pre-configured packages
+
+A number of packages have special support integrated under the
+`ros/services/` directory.
+
+### rosbag player
+
+The rosbag player plays back recorded ROS content from a rosbag file.
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.bagPlayer = {
+    file = <path-to-rosbag-file>;
+
+    # Default if `topics` is unspecified is to play back all topics in
+    # the file.
+    topics = [
+      "/topic1"
+      "/topic2"
+    ];
+  };
+}
+```
+`bagPlayer` always plays back the file in a continuous loop.
+
+### elevation_mapping
+
+elevation_mapping is an ANYbotics library for building a map out of
+point clouds. The library is not present in APT, so it must be
+compiled from source.
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.elevationMapping = {
+    # Use `build` to have `elevationMapping` compile but not actually
+    # install.
+    build = true;
+
+    # Actually install and run `elevationMapping`; implies `build`.
+    enable = true;
+
+    # Set of point cloud sensors to build the map out of.
+    pointClouds = [
+      "sensor1"
+      "sensor2"
+    ];
+
+    # Reference frame for the point clouds.
+    trackPointFrameId = "some_frame";
+  };
+}
+```
