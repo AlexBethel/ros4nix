@@ -216,3 +216,91 @@ compiled from source.
   };
 }
 ```
+
+### move_base
+
+The ROS1 navigation library. Support is currently very limited and
+untested.
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.moveBase.enable = true;
+}
+```
+
+### Intel Realsense cameras
+
+At present a single Realsense camera is supported (this needs to
+change ASAP).
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.realsense2 = {
+    enable = true;
+
+    # Standard realsense2 options.
+    options = {
+      # These are all the defaults and may be omitted.
+      mode = "preset";
+      serial_no = "";
+      usb_port_id = "";
+      camera_type = "";
+      enable_ir = false;
+      enable_depth = true;
+      depth_width = null;
+      depth_height = null;
+      depth_fps = 60;
+      enable_color = true;
+      color_width = 640;
+      color_height = 480;
+      color_fps = 60;
+      enable_fisheye = true;
+      fisheye_width = 640;
+      fisheye_height = 480;
+      fisheye_fps = 60;
+      enable_imu = true;
+      enable_pointcloud = false;
+      enable_tf = true;
+      enable_tf_dynamic = false;
+      base_frame_id = "camera_link";
+      depth_frame_id = "camera_depth_frame";
+      depth_optical_frame_id = "camera_depth_optical_frame";
+      color_frame_id = "camera_rgb_frame";
+      color_optical_frame_id = "camera_rgb_optical_frame";
+      ir_frame_id = "camera_ir_frame";
+      ir_optical_frame_id = "camera_ir_optical_frame";
+      ir2_frame_id = "camera_ir2_frame";
+      ir2_optical_frame_id = "camera_ir2_optical_frame";
+      fisheye_frame_id = "camera_fisheye_frame";
+      fisheye_optical_frame_id = "camera_fisheye_optical_frame";
+      imu_frame_id = "camera_imu_frame";
+      imu_optical_frame_id = "camera_optical_frame_id";
+    };
+  };
+}
+```
+
+### rosbridge
+
+A simple bridge between ROS and the rest of the world; a TCP server
+that listens for commands written by outside programs, and performs
+them within the ROS network.
+
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.rosbridge.enable = true;
+}
+```
+
+### Static transform publishers
+
+TODO
+
+### Test publisher
+
+TODO
+
+### USB camera
+
+TODO
