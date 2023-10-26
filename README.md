@@ -31,7 +31,7 @@ The project has a few major goals:
   from one configuration, and this configuration can be copied between
   machines freely.
 
-# System requirements
+## System requirements
 
 `ros4nix` is known to work on x86_64 machines and aarch64 machines;
 beyond this, the program has support for running under the following
@@ -62,6 +62,34 @@ systemd to manage scheduling services at boot time, and Docker's
 support for initializing a container with systemd is less than ideal,
 to say the least.
 
-# Configuring
+## Basic use
+
+The most important command to remember is `ros4nix switch
+<configuration.nix>`: it will initialize the Nix and ROS systems,
+build the ROS configuration described, bootstrap an Ubuntu container
+into `/var/ros` if configured to do so, install wrappers for all the
+ROS system binaries into `/var/ros/nixWrappers/`, and install, enable,
+and start systemd services for all enabled ROS nodes: in a nutshell,
+it means "make the ROS subsystem resemble the configuration, by
+whatever means necessary."
+
+**Important:** `ros4nix` uses `nix-env` to maintain different
+generations of the configuration, and advanced users can use this
+feature to roll back to old configurations if new ones break the
+system. However, this preservation of old generations can cause
+a large amount of disk space to be used. Use `sudo nix-collect-garbage
+-d` periodically to delete old generations.
+
+To uninstall `ros4nix`, there are 2 commands: `ros4nix reset`, and
+`ros4nix purge`, neither of which take other arguments. `ros4nix
+reset` stops all currently running ROS nodes, and removes them from
+systemd so that they will no longer be started when the system boots.
+`ros4nix purge` does the same thing, but *also* deletes all of
+`/var/ros`: it leaves the system in the state it was in before
+`ros4nix` had ever been installed or run. A safe way to completely
+rebuild a ROS installation and discard all its state is to run
+`ros4nix purge; ros4nix switch <configuration.nix>`.
+
+## Configuring
 
 TODO
