@@ -15,6 +15,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
     };
 
     masterUri = mkOption {
+      # FIXME: this is redundant with programs.ros.master???
       type = types.str;
       default = "http://localhost:11311";
       description = ''

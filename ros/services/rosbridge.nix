@@ -21,14 +21,6 @@ with lib;
 
     programs.ros.packages = [ "rosbridge-server" ];
 
-    # systemd.services.rosBridge = {
-    #   wantedBy = [ "multi-user.target" ];
-    #   after = [ "rosMaster.service" ];
-
-    #   script = ''
-    #     /var/ros/nixWrappers/roslaunch rosbridge_server rosbridge_tcp.launch
-    #   '';
-    # };
     services.ros.launchServices.rosbridge = {
       packageName = "rosbridge_server";
       launchFile = "rosbridge_tcp.launch";

@@ -100,7 +100,7 @@ check_nix () {
             echo 'Run this script as non-root.'
         fi
 
-        echo -n 'Would you like me to install it for you [yN]?'
+        echo -n 'Would you like me to install it for you [yN]? '
         read input
         if [ "${input,,?}" != "y" ]; then
             echo 'Aborting.'

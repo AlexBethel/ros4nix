@@ -325,7 +325,7 @@ let rosLib = import ./rosLib.nix; in
       launchServices.realsense = {
         packageName = "realsense2_camera";
         launchFile = "rs_camera.launch";
-        options = config.services.ros.realsense2.options;
+        # options = config.services.ros.realsense2.options;
       };
     };
   };

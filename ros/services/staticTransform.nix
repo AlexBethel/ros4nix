@@ -72,13 +72,6 @@ let rosLib = import ./rosLib.nix { inherit lib; }; in
       runServices = rosLib.mapIntoAttrs
         (
           { parent, child, x, y, z, roll, pitch, yaw }:
-          # {
-          #   name = "test1";
-          #   value = {
-          #     packageName = "tf2_ros";
-          #     executable = "static_transform_publisher";
-          #   };
-          # }
           let
             toRad = deg: deg / 180 * 3.14159265;
             rollRad = toRad roll;
