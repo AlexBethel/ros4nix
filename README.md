@@ -243,7 +243,10 @@ rosrun foo bar /somewhere:=/somewhere_else arg1 arg2
 ## Macros for pre-configured packages
 
 A number of packages have special support integrated under the
-`ros/services/` directory.
+`ros/services/` directory. These files are actually just NixOS
+modules, and new ones can be developed the same way; see
+https://nixos.org/manual/nixos/stable/#sec-writing-modules for precise
+details, which shan't be documented here.
 
 ### rosbag player
 
@@ -276,7 +279,7 @@ compiled from source.
   services.ros.elevationMapping = {
     # Use `build` to have `elevationMapping` compile but not actually
     # install.
-    build = true;
+    # build = true;  # Not usually required
 
     # Actually install and run `elevationMapping`; implies `build`.
     enable = true;
