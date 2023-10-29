@@ -31,31 +31,55 @@ The project has a few major goals:
   from one configuration, and this configuration can be copied between
   machines freely.
 
-## System requirements
+## Modes of operation
 
 `ros4nix` is known to work on x86_64 machines and aarch64 machines;
-beyond this, the program has support for running under the following
-configurations:
-* As a `bwrap` chroot-like environment on a NixOS machine, installed
-  as a NixOS module. This is the primary target because we can make
-  the most assumptions about the kernel and other software running on
-  the system.
-* As a `bwrap` chroot-like environment on a non-NixOS machine. This
-  requires:
-  - Support for running Nix on the system. `ros4nix` will try to
-    install Nix for you if you haven't already set it up.
-  - The ability to bootstrap an Ubuntu installation using
-    `debootstrap`. This requires that the kernel not have a minor
-    version number higher than 255, which is known not to be the case
-    on some pathological NVIDIA SBC's.
-  - User namespaces to be enabled on the kernel. This is true of most
-    Linux distributions released within the last decade.
-* As a manager for a real ROS installation on the bare operating
-  system. This requires that the operating system be a supported
-  version of either Debian or Ubuntu for the particular targeted
-  version of ROS.
-* As a manager for a ROS installation inside a Podman container with
-  systemd as its init.
+beyond this, the program has support for running under a number of
+different configurations
+
+### As a chroot on a NixOS host
+
+Import the `ros` directory into your system `configuration.nix`, and
+all the ROS settings can be integrated directly into your overall host
+configuration. This is the most ideal way to use `ros4nix` because it
+allows us to make the most assumptions about the kernel and other
+software running on the system, and obviously allows the most
+powerful config.
+
+In this mode, `ros4nix` will use `debootstrap` to generate an Ubuntu
+installation inside `/var/ros`, then use `bwrap` to manage it like a
+chroot environment.
+
+### As a chroot on a non-NixOS host
+
+Use the provided `ros4nix` program. This requires:
+- Support for running Nix on the system. `ros4nix` will try to install
+  Nix for you if you haven't already set it up.
+- The ability to bootstrap an Ubuntu installation using `debootstrap`.
+  This requires that the kernel not have a minor version number higher
+  than 255, which is known not to be the case on some goofy NVIDIA
+  SBC's.
+- User namespaces to be enabled on the kernel. This is true of most
+  Linux distributions released within the last decade.
+
+Once again, `ros4nix` will build a `bwrap` container in `/var/ros` in
+this mode.
+
+### As a ROS manager for an Ubuntu/Debian host
+
+If your host is running the correct version of Ubuntu or Debian to
+install the ROS version you want, you can use `ros4nix` to manage your
+actual ROS installation; in this case, `ros4nix` basically just
+dispatches `apt` commands and creates systemd services. To use this
+mode, set `programs.ros.useMainRoot` to `true`.
+
+### As a ROS manager for an Ubuntu container
+
+If you use Podman to build an Ubuntu container of the right version,
+you can use `ros4nix` to manage its installation of ROS the same way
+as you would for a real host, with `program.ros.useMainRoot` set to
+`true`. Podman must be configured to run `systemd` as its initial
+program.
 
 We explicitly *do not* support Docker, because `ros4nix` requires
 systemd to manage scheduling services at boot time, and Docker's
