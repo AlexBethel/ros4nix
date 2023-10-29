@@ -158,11 +158,87 @@ by the used.
 
 ### Scheduling `roslaunch` programs
 
-TODO
+ROS defines two primary ways of launching nodes: `roslaunch` and
+`rosrun`. `roslaunch` is typically used to launch ensembles of nodes
+rather than individual ones, and is thus preferred by most authors.
+```nix
+{ config, pkgs, ... }:
+{
+  # Replace <name> with a name for the service; it can be arbitrary,
+  # and is typically the same as the name of the node being launched.
+  services.ros.launchServices.<name> = {
+    # Name of the ROS package in which the .launch file is found.
+    packageName = "foo";
+
+    # Name of the launch file itself.
+    launchFile = "bar.launch";
+
+    # Key-value pairs to send to the service.
+    args = {
+      xyz = true;
+      zyx = "something";
+    };
+  };
+}
+```
+For reference, this example configuration is the same as typing
+`roslaunch --wait foo bar.launch xyz:=true zyx:=something` each time
+the system boots.
+
+This option creates and enables a systemd service called `ros-<name>`;
+it can be managed like any other systemd service, meaning you can pull
+up logs for it with `systemctl logs ros-<name>`, or start and stop it
+with the `start` and `stop` subcommands of `systemctl`, respectively.
+It is generally recommended that you not `disable` the service,
+because doing so is unreliable: first, it can cause other `ros4nix`
+modules that automatically enabled this node because they depend on it
+to not function properly, because the node they depend on is missing;
+also, it is not respected by `ros4nix`, as whenever you re-run
+`ros4nix switch` the program will automatically re-enable every
+service it created.
 
 ### Scheduling `rosrun` programs
 
-TODO
+`rosrun` is used to launch individual nodes rather than groups of
+nodes.
+```nix
+{ config, pkgs, ... }:
+{
+  services.ros.runServices.<name> = {
+    # Name of the ROS package providing the node.
+    packageName = "foo";
+
+    # Name of the executable to run.
+    executable = "bar";
+
+    # ROS paths to remap.
+    remap."/somewhere" = "/somewhere_else";
+
+    # Other raw arguments to pass to the program.
+    rawArgs = [ "arg1" "arg2" ];
+
+    # Value of the ROS_NAMESPACE environment variable (support is
+    # still WIP).
+    namespace = "/my_namespace";
+
+    # Values to load into the ROS parameter server before running the
+    # service. This can be the path to a file, but this `writeText`
+    # pattern is usually more appropriate.
+    rosParams = pkgs.writeText "params.yaml" (builtins.toJSON {
+      someKey = "someValue";
+      # arbitrary other key-value pairs can go here.
+    });
+  };
+}
+```
+Only `packageName` and `executable` are required. This example is
+roughly equivalent to running these commands at boot time:
+```bash
+# Assuming `params.yaml` has the parameters we specified.
+rosparam load params.yaml /foo
+export ROS_NAMESPACE=/my_namespace
+rosrun foo bar /somewhere:=/somewhere_else arg1 arg2
+```
 
 ## Macros for pre-configured packages
 
