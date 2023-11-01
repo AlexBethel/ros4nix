@@ -29,7 +29,7 @@ Supported operations are:
                 all services will run at the next system reboot, but
                 does not actually start any services.
 
-  reset         Uninstalls the ros4nix subsystem, while leaving the ROS
+  reset         Disables ros4nix systemd services, while leaving the ROS
                 rootfs directory (/var/ros) intact.
 
   purge         Uninstalls the ros4nix subsystem and deletes the ROS

@@ -122,6 +122,16 @@ with lib;
       default = null;
       description = "Address of the default ROS master.";
     };
+
+    myIP = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        My IP address; this is the ROS_IP variable. Under some
+        circumstances this needs to be set, and under others it does
+        not; I'm not entirely clear on it ~~Alex
+      '';
+    };
   };
 
   config =
@@ -191,6 +201,11 @@ with lib;
             then ''export ROS_MASTER_URI=''${ROS_MASTER_URI:-http://${config.programs.ros.master}:11311}''
             else ''''
         }
+        ${
+          if config.programs.ros.myIP != null
+            then ''export ROS_IP=''${ROS_IP:-${config.programs.ros.myIP}}''
+            else ''''
+        }
 
         export PATH=/bin:/sbin
         export SHELL=/bin/sh
@@ -221,6 +236,11 @@ with lib;
         ${
           if config.programs.ros.master != null
             then ''export ROS_MASTER_URI=''${ROS_MASTER_URI:-http://${config.programs.ros.master}:11311}''
+            else ''''
+        }
+        ${
+          if config.programs.ros.myIP != null
+            then ''export ROS_IP=''${ROS_IP:-${config.programs.ros.myIP}}''
             else ''''
         }
 
