@@ -17,6 +17,8 @@ Supported operations are:
                 common operation, and is intended to be idempotent and
                 reversible.
 
+  chroot        Open a shell inside the ros4nix installation.
+
   activate      Re-activate the currently-installed system. This should
                 (almost) never have to be run manually as it is run
                 automatically by the 'switch' operation. Just makes
@@ -46,6 +48,15 @@ Usage: $0 switch <config_file>
 
 Install and activate a configuration. This is the most common
 operation in ros4nix, and is intended to be idempotent and reversible.
+" > /dev/stderr
+}
+
+print_help_chroot () {
+    echo -n "ros4nix chroot: chroot into the ROS installation
+
+Usage: $0 chroot
+
+Open a shell inside the ros4nix installation.
 " > /dev/stderr
 }
 
@@ -228,6 +239,14 @@ case "$1" in
         check_nix
         . /etc/bashrc
         install_system "$config_file"
+        ;;
+    chroot)
+        shift
+        if [ "$#" != 0 ]; then
+            print_help_chroot
+        fi
+
+        exec /nix/var/nix/profiles/ros4nix/bin/chroot-ros
         ;;
     activate)
         shift
