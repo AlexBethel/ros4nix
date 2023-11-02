@@ -189,6 +189,20 @@ uninstall_units () {
 activate_system () {
     echo "Running ROS activation snippet..."
     sudo /nix/var/nix/profiles/ros4nix/bin/activate-ros
+
+    if [ -e /etc/environment ]; then
+        if ! grep -e 'nixWrappers' /etc/environment; then
+            echo 'Adding /var/ros/nixWrappers to /etc/environment...'
+            . /etc/environment
+            echo "PATH=$PATH:/var/ros/nixWrappers" | sudo tee -a /etc/environment > /dev/null
+            echo "You'll need to log out and back in for ROS to work."
+        fi
+    else
+        echo "Warning: you don't have /etc/environment, I don't know how to"
+        echo "         finalize the install! All the ROS executables are in"
+        echo "         the directory /var/ros/nixWrappers/; you'll have to"
+        echo "         add them to PATH yourself."
+    fi
 }
 
 # Install and start ROS units as necessary.
