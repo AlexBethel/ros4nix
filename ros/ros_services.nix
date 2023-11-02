@@ -58,6 +58,14 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
             '';
           };
 
+          workspace = mkOption {
+            type = nullOr str;
+            default = null;
+            description = ''
+              Path to the catkin workspace with the package.
+            '';
+          };
+
           # Probably remapping arguments should go here as well? I'm
           # not sure how exactly remapping arguments work with
           # roslaunch.
@@ -122,6 +130,14 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
               running this ROS node.
             '';
           };
+
+          workspace = mkOption {
+            type = nullOr str;
+            default = null;
+            description = ''
+              Path to the catkin workspace with the package.
+            '';
+          };
         };
       });
     };
@@ -181,7 +197,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
     (mkIf (config.services.ros.enable) {
       systemd.services = rosLib.mapAttrsFull
         (
-          name: { packageName, launchFile, args }:
+          name: { packageName, launchFile, args, workspace }:
             {
               name = "ros-${name}";
               value = {
@@ -194,8 +210,13 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                 script =
                   let
                     opts = rosLib.attrsToCmdLine args;
+                    cdCommand =
+                      if workspace != null
+                      then "cd ${workspace}"
+                      else "";
                   in
                   ''
+                    ${cdCommand}
                     ${config.programs.ros.rootDir}/nixWrappers/roslaunch --wait ${packageName} ${launchFile} ${opts}
                   '';
               };
@@ -208,7 +229,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
     (mkIf (config.services.ros.enable) {
       systemd.services = rosLib.mapAttrsFull
         (
-          name: { packageName, executable, rawArgs, remap, namespace, rosParams }:
+          name: { packageName, executable, rawArgs, remap, namespace, rosParams, workspace }:
             {
               name = "ros-${name}";
               value = {
@@ -221,17 +242,20 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                 # TODO: we should use namespace here somewhere.
                 script =
                   let
+                    cdCommand =
+                      if workspace != null
+                      then "cd ${workspace}"
+                      else "";
+                    paramsCommand =
+                      if rosParams != null
+                      then ''
+                        ${config.programs.ros.rootDir}/nixWrappers/rosparam load ${rosParams} /${packageName}
+                      '' else "";
                     opts = concatStringsSep " " rawArgs + rosLib.attrsToCmdLine remap;
                   in
-                  (
-                    if rosParams != null
-                    then
-                      ''
-                        ${config.programs.ros.rootDir}/nixWrappers/rosparam load ${rosParams} /${packageName}
-                      ''
-                    else ""
-                  ) +
                   ''
+                    ${cdCommand}
+                    ${paramsCommand}
                     ${config.programs.ros.rootDir}/nixWrappers/rosrun ${packageName} ${executable} ${opts}
                   '';
               };
