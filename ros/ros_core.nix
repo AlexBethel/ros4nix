@@ -145,10 +145,14 @@ with lib;
         ${if config.programs.ros.useMainRoot
           then ''
             /init
-            /stage3
+            if [ -e /stage3 ]; then
+                /stage3
+            fi
           '' else ''
             PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc /init
-            PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
+            if [ -e /stage3 ]; then
+                PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
+            fi
           ''
          }
       '';
