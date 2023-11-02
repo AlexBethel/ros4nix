@@ -182,7 +182,11 @@ with lib;
         . /catkin_ws/devel/setup.zsh
         if grep -qe 'catkin_ws' <<< "$PWD"
         then
-            . $(echo "$PWD" | sed 's:/catkin_ws.*::')/catkin_ws/devel/setup.zsh
+            setup_path=$(echo "$PWD" | sed 's:/catkin_ws.*::')/catkin_ws/devel/setup.zsh
+            if [ -e "$setup_path" ]
+            then
+                . $(echo "$PWD" | sed 's:/catkin_ws.*::')/catkin_ws/devel/setup.zsh
+            fi
         fi
 
         xargs -0 -a "$ARG_FILE" "$PROGRAM"
