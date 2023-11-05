@@ -2,9 +2,9 @@
 
 `ros4nix` is a program for managing ROS using Nix and NixOS. It is not
 a direct *port*, per se, of ROS to Nix, as no ROS software ever gets
-compiled or downloaded into the Nix store itself; rather, it manages
-an Ubuntu virtual machine into which ROS is installed in the
-traditional manner.
+compiled or downloaded into the Nix store itself; rather, it manages a
+highly customized Ubuntu container system into which ROS is installed
+in the traditional manner.
 
 The project has a few major goals:
 - Portability. ROS itself is difficult to port to new operating
@@ -30,6 +30,94 @@ The project has a few major goals:
   guaranteed to be easy. `ros4nix` defines the entire ROS installation
   from one configuration, and this configuration can be copied between
   machines freely.
+
+## Quick reference
+
+Here are a few common tasks, illustrating how they are typically done
+with standard ROS and `ros4nix` respectively.
+
+### Installing apt packages
+
+**On normal ROS:** `sudo apt install ros-<distro>-<pkg_name>`.
+
+**On `ros4nix`:** add `programs.ros.packages = [ "<pkg_name>" ]` to
+`configuration.nix` (or if it has a module written for it, just enable
+that module), then use `ros4nix switch configuration.nix` to reload
+the configuration.
+
+### Installing non-apt packages
+
+**On normal ROS:** install the APT package dependencies, then clone
+all the non-APT Catkin dependencies into a Catkin workspace, then use
+`catkin build` to compile them, and always do other development in
+that Catkin workspace.
+
+**On `ros4nix`:** add the non-APT dependencies as normal, then write
+```nix
+{
+  programs.ros.buildPackages.<package name> = pkgs.fetchFromGitHub {
+    owner = "<owner name>";
+    repo = "<package name>";
+    rev = "<tag to check out>";
+    sha256 = "";
+  };
+}
+```
+, then use `ros4nix switch configuration.nix` to attempt to build the
+package; when that fails, copy the sha256 hash it prints to the
+terminal into the `configuration.nix`, and it should succeed; it is
+strongly recommended that you then refactor the work into a proper
+module so no one else has to do the build themself. See
+`ros/services/kindrRos.nix` for an example of a package that's been
+configured to compile and install by anyone just specifying
+`services.ros.libraries.kindrRos.enable = true`, and
+`ros/services/elevationMapping.nix` for a more intricate example.
+
+### Loading a Catkin workspace
+
+**On normal ROS:** `. <workspace>/devel/setup.bash`.
+
+**On `ros4nix`:** simply `cd` into the workspace, and the tooling will
+load the workspace for you automatically; `rosrun`, `roslaunch`,
+`catkin build`, etc., should just work immediately.
+
+### Running a ROS master at boot
+
+**On normal ROS:** typically write a systemd service to do it; there
+is no official standardized solution.
+
+**On `ros4nix`:** set `services.ros.enable` to `true` in
+`configuration.nix`, then use `ros4nix switch configuration.nix`.
+
+### Running ROS nodes at boot
+
+**On normal ROS:** typically write a systemd service to do it; there
+is no official standardized solution.
+
+**On `ros4nix`:** add an entry to `services.ros.launchServices` and
+`services.ros.runServices`.
+
+### Reinstalling and/or uninstalling ROS
+
+**On normal ROS:** no direct support, but your best bet is to run
+`sudo apt remove 'ros-*'`, then reinstall your needed packages if
+necessary.
+
+**On `ros4nix`:** use `ros4nix purge` to delete the entire ROS
+container, then `ros4nix switch configuration.nix` to rebuild it if
+needed.
+
+### Getting a shell with real ROS tooling available
+
+**On normal ROS:** unnecessary, because they're installed by default.
+
+**On `ros4nix`:** use `ros4nix chroot` to get a shell inside the
+Ubuntu container that all ROS software is run within; the raw ROS
+tools will then be in `/opt/ros`. If you need to do this for your
+actual project and not just interest in the design of `ros4nix`,
+please add a bug report to the issue tracker for this repo, because if
+the software does its job correctly, this operation should never be
+necessary.
 
 ## Modes of operation
 
@@ -407,3 +495,28 @@ TODO
 ### USB camera
 
 TODO
+
+## To-do
+
+* Make a function called `ros4nix doc` that auto-generates
+  documentation for the system.
+* Get some means of having auto-complete; the actual ROS tools will
+  complete things like `rosrun r<TAB>` into a list of every ROS tool
+  that starts with "r", and this is currently not implemented.
+* Add strong, automatic support for using the Language Server Protocol
+  with developing Catkin packages. There are multiple approaches:
+  - possibly writing a small wrapper around `catkin_create_pkg` and/or
+    `catkin_init_workspace` that creates `compile_flags.txt` for
+    `clangd`. (Not great since these files couldn't be tracked by
+    git.)
+  - possibly writing a wrapper around LSP servers like `clangd` and
+    Python's LSP that run the servers inside the ROS container if they
+    detect that you're in a Catkin workspace. (Unlikely because that
+    would completely override the system installed LSP servers, which
+    might cause problems.)
+  - possibly using environment variables to communicate information
+    with LSP servers when it's detected that you're in a Catkin
+    workspace.
+  - possibly just making a few useful shell commands so that, e.g.,
+    you use `ros4nix fix-lsp` to generate LSP configuration files that
+    just work.
