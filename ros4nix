@@ -31,6 +31,9 @@ Supported operations are:
                 all services will run at the next system reboot, but
                 does not actually start any services.
 
+  cflags        Generate a compile_flags.txt file in the current
+                directory, suitable for working with clangd.
+
   reset         Disables ros4nix systemd services, while leaving the ROS
                 rootfs directory (/var/ros) intact.
 
@@ -79,6 +82,16 @@ Usage: $0 check <config_file>
 Performs a basic analysis to check that a configuration is OK without
 actually installing it.
 " > /dev/stderr
+}
+
+print_help_cflags () {
+    echo -n "ros4nix cflags: generate compile_flags.txt
+
+Usage: $0 cflags
+
+Generate a compile_flags.txt file in the current directory, suitable
+for working with clangd.
+"
 }
 
 print_help_reset () {
@@ -284,6 +297,45 @@ case "$1" in
         ;;
     boot)
         echo 'Not implemented'
+        ;;
+    cflags)
+        shift
+        if [ "$#" != 0 ]; then
+            print_help_cflags
+            exit 1
+        fi
+
+        # This is currently just a completely static file that
+        # includes the ROS include directory, as well as a
+        # Nix-provided version of boost that gets symlinked into
+        # /var/ros; we mostly have this here in case the internal
+        # structure changes later.
+        #
+        # It's actually critically important that this file not
+        # include any Nix store paths, because people won't want to
+        # actually run this command, they'll want to be able to check
+        # out their repo and have autocomplete *just work*; and that
+        # requires that compile_flags.txt be checked into the repo,
+        # and therefore it can't vary between machines under any
+        # circumstances.
+        (
+            # ROS include dirs.
+            echo -n '-I'
+            echo -n /var/ros/opt/ros/*
+            echo -n /include
+            echo
+
+            # Boost.
+            echo -n '-I'
+            echo -n /var/ros/ext_libs/include
+            echo
+
+            # catkin workspace local include files.
+            echo -n '-I'
+            echo -n devel/include
+            echo
+        ) > compile_flags.txt
+        echo 'generated file compile_flags.txt'
         ;;
     reset)
         shift

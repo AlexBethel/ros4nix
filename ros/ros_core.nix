@@ -293,6 +293,11 @@ with lib;
               ${config.programs.ros.baseImage.suite} \
               ${config.programs.ros.rootDir} \
               ${config.programs.ros.baseImage.mirror}
+
+          # Drop a copy of Boost where we can reliably find it, while
+          # we're here. This will get used by `ros4nix cflags`.
+          ${pkgs.coreutils}/bin/ln -s ${pkgs.boost.dev} \
+              ${config.programs.ros.rootDir}/ext_libs
         '';
 
       # The stage 2 script runs inside the container, performs a
@@ -339,7 +344,7 @@ with lib;
 
           # Install needed packages.
           [
-            ("apt-get install -y " +
+            ("apt-get install --no-install-recommends -y " +
             builtins.concatStringsSep " " (
               config.programs.ros.ubuntuPackages ++
               map
