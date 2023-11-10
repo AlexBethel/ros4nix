@@ -127,9 +127,15 @@ with lib;
       type = types.nullOr types.str;
       default = null;
       description = ''
-        My IP address; this is the ROS_IP variable. Under some
-        circumstances this needs to be set, and under others it does
-        not; I'm not entirely clear on it ~~Alex
+        My IP address; this is the ROS_IP variable. Unless DNS
+        resolution exactly matches every hostname on the network, ROS
+        requires this variable needs to be set on every machine that
+        publishes a topic.
+
+        If it is left unset, ros4nix will make a guess as to the
+        correct IP address; unless you have an unusual routing setup,
+        the guess should almost always be correct and won't need
+        manual adjustment.
       '';
     };
   };
@@ -214,9 +220,16 @@ with lib;
         }
         ${
           if config.programs.ros.myIP != null
-            then ''export ROS_IP=''${ROS_IP:-${config.programs.ros.myIP}}''
-            else ''''
+            then ''ip_guess=${config.programs.ros.myIP}''
+          else ''ip_guess="$(${pkgs.iproute2}/bin/ip route show to match ''
+               +
+               (if config.programs.ros.master != null
+                  then config.programs.ros.master
+                  else "1.1.1.1")
+               +
+            '' | sed 's/.*via //;s/ .*//')"''
         }
+        export ROS_IP=''${ROS_IP:-$ip_guess}
 
         export PATH=/bin:/sbin
         export SHELL=/bin/sh
