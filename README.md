@@ -503,20 +503,3 @@ TODO
 * Get some means of having auto-complete; the actual ROS tools will
   complete things like `rosrun r<TAB>` into a list of every ROS tool
   that starts with "r", and this is currently not implemented.
-* Add strong, automatic support for using the Language Server Protocol
-  with developing Catkin packages. There are multiple approaches:
-  - possibly writing a small wrapper around `catkin_create_pkg` and/or
-    `catkin_init_workspace` that creates `compile_flags.txt` for
-    `clangd`. (Not great since these files couldn't be tracked by
-    git.)
-  - possibly writing a wrapper around LSP servers like `clangd` and
-    Python's LSP that run the servers inside the ROS container if they
-    detect that you're in a Catkin workspace. (Unlikely because that
-    would completely override the system installed LSP servers, which
-    might cause problems.)
-  - possibly using environment variables to communicate information
-    with LSP servers when it's detected that you're in a Catkin
-    workspace.
-  - possibly just making a few useful shell commands so that, e.g.,
-    you use `ros4nix fix-lsp` to generate LSP configuration files that
-    just work.
