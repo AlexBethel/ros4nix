@@ -221,13 +221,13 @@ with lib;
         ${
           if config.programs.ros.myIP != null
             then ''ip_guess=${config.programs.ros.myIP}''
-          else ''ip_guess="$(${pkgs.iproute2}/bin/ip route show to match ''
+          else ''ip_guess="$(${pkgs.iproute2}/bin/ip route get ''
                +
                (if config.programs.ros.master != null
                   then config.programs.ros.master
                   else "1.1.1.1")
                +
-            '' | sed 's/.*src //;s/ .*//')"''
+            '' | head -n1 | sed 's/.*src //;s/ .*//')"''
         }
         export ROS_IP=''${ROS_IP:-$ip_guess}
 
