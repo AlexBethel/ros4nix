@@ -227,7 +227,7 @@ with lib;
                   then config.programs.ros.master
                   else "1.1.1.1")
                +
-            '' | sed 's/.*via //;s/ .*//')"''
+            '' | sed 's/.*src //;s/ .*//')"''
         }
         export ROS_IP=''${ROS_IP:-$ip_guess}
 
