@@ -369,7 +369,8 @@ with lib;
                 (name:
                   "${name}-"
                 )
-                skippedPackages
+                skippedPackages ++
+              [ "make" ]
             )
             )
           ] ++
