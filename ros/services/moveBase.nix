@@ -79,6 +79,14 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
           default = 1.0;
         };
 
+        forwardMin = mkOption {
+          type = types.number;
+          description = ''
+            Minimum forward velocity of the robot. Meters/second.
+          '';
+          default = 0.1;
+        };
+
         backward = mkOption {
           type = types.number;
           description = ''
@@ -274,6 +282,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                   publish_feedback = false;
 
                   # Robot
+                  min_vel_x = cfg.limits.forwardMin;
                   max_vel_x = cfg.limits.forward;
                   max_vel_x_backwards = cfg.limits.backward;
                   max_vel_y = cfg.limits.left_right;
