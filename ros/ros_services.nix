@@ -58,6 +58,15 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
             '';
           };
 
+          rosParams = mkOption {
+            type = nullOr path;
+            default = null;
+            description = ''
+              YAML file to load into the ROS parameter server before
+              running this ROS node.
+            '';
+          };
+
           workspace = mkOption {
             type = nullOr str;
             default = null;
@@ -197,7 +206,7 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
     (mkIf (config.services.ros.enable) {
       systemd.services = rosLib.mapAttrsFull
         (
-          name: { packageName, launchFile, args, workspace }:
+          name: { packageName, launchFile, args, rosParams, workspace }:
             {
               name = "ros-${name}";
               value = {
@@ -214,9 +223,15 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                       if workspace != null
                       then "cd ${workspace}"
                       else "";
+                    paramsCommand =
+                      if rosParams != null
+                      then ''
+                        ${config.programs.ros.rootDir}/nixWrappers/rosparam load ${rosParams} /${packageName}
+                      '' else "";
                   in
                   ''
                     ${cdCommand}
+                    ${paramsCommand}
                     ${config.programs.ros.rootDir}/nixWrappers/roslaunch --wait ${packageName} ${launchFile} ${opts}
                   '';
               };
