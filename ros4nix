@@ -244,7 +244,8 @@ load_units () {
     sudo systemctl daemon-reload
 
     echo "Starting necessary services..."
-    for service in $src/etc/systemd/system/multi-user.target.wants/ros*.service; do
+    sudo systemctl start rosMaster.service
+    for service in $src/etc/systemd/system/multi-user.target.wants/ros-*.service; do
         sudo systemctl start $(basename "$service")
     done
 }
