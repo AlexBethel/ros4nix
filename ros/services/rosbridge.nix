@@ -13,6 +13,18 @@ with lib;
           outside processes.
         '';
       };
+
+      mode = mkOption {
+        type = types.enum [
+          "tcp"
+          "udp"
+          "websocket"
+        ];
+        default = "tcp";
+        description = ''
+          Type of service to provide over the socket.
+        '';
+      };
     };
   };
 
@@ -23,7 +35,7 @@ with lib;
 
     services.ros.launchServices.rosbridge = {
       packageName = "rosbridge_server";
-      launchFile = "rosbridge_tcp.launch";
+      launchFile = "rosbridge_${config.services.ros.rosbridge.mode}.launch";
     };
   });
 }
