@@ -123,7 +123,7 @@ necessary.
 
 `ros4nix` is known to work on x86_64 machines and aarch64 machines;
 beyond this, the program has support for running under a number of
-different configurations
+different configurations.
 
 ### As a chroot on a NixOS host
 
@@ -157,9 +157,9 @@ this mode.
 
 If your host is running the correct version of Ubuntu or Debian to
 install the ROS version you want, you can use `ros4nix` to manage your
-actual ROS installation; in this case, `ros4nix` basically just
-dispatches `apt` commands and creates systemd services. To use this
-mode, set `programs.ros.useMainRoot` to `true`.
+actual ROS installation; in this case, `ros4nix` just dispatches `apt`
+commands and creates systemd services. To use this mode, set
+`programs.ros.useMainRoot` to `true`.
 
 ### As a ROS manager for an Ubuntu container
 
@@ -503,3 +503,112 @@ TODO
 * Get some means of having auto-complete; the actual ROS tools will
   complete things like `rosrun r<TAB>` into a list of every ROS tool
   that starts with "r", and this is currently not implemented.
+
+# Implementation
+
+`ros4nix` is implemented as a NixOS module, which operates by adding a
+large set of custom configuration options to the `ros` namespace of
+options in NixOS.
+
+The configuration is very roughly split up into two sections,
+`programs.ros` and `services.ros`; some redundancy is present and the
+subdivision here is not even, but in general, `program.ros.*` concerns
+itself with *static* configuration of the system and making the ROS
+command-line options available, whereas `services.ros.*` concerns
+itself with making run-time configurations that are enabled at boot
+time. The main core of the `programs.ros.*` namespace is in
+`ros/ros_core.nix`, and the core of the `services.ros.*` namespace is
+in `ros/ros_services.nix`.
+
+## ROS Core
+
+The main ROS core is implemented as part of the system activation
+script (which runs every time `nixos-rebuild switch` is executed), and
+uses three "stages" to build a ROS subsystem on the current system:
+1. Get the main operating system up and running, upon which we will
+   build a ROS system. In non-chroot mode (i.e., with a native
+   Ubuntu/Debian host that will have a real ROS installation into its
+   root directory, or when set up for use in Podman; when
+   `programs.ros.useMainRoot` is enabled) this stage does nothing,
+   because the host operating system is already capable of using `apt`
+   to install ROS packages. On all other systems, we make a directory
+   `/var/ros`, and use `debootstrap` to install Ubuntu into that
+   directory.
+2. Use `apt` to ensure `curl` and `gnupg` are available to be able to
+   download the ROS public key, add the ROS public key to the system,
+   ensure that the standard Ubuntu APT sources are placed in
+   `/etc/apt/sources.list.d`, do a system update, and then install all
+   needed ROS packages. In chroot mode, stage 2 is called using
+   `bwrap` to chroot into the generated Ubuntu system. Stage 2 always
+   leaves a script called `/var/ros/init` (`/init` if non-chroot)
+   containing the precise work done.
+3. For any packages that need to be built from source, copy their
+   source trees into `/var/ros/catkin_ws/src`, then use `catkin build`
+   to build `/var/ros/catkin_ws` in release mode. Stage 3 always
+   leaves a script called `/var/ros/stage3` containing the precise
+   work done.
+4. Link the generated ROS executables from the container environment
+   into the main system. If the system is running in non-chroot mode
+   this step does nothing; otherwise, we create the directory
+   `/var/ros/nixWrappers`, and fill it with links to wrappers for ROS
+   programs. Every program installed in the container's `/bin`
+   starting with the string `catkin` s installed, as is every
+   executable in the container's `/opt/ros/<distro>/bin` directory.
+
+   The actual wrapper program that is linked is not as trivial as it
+   seems. It performs a few basic tasks:
+   - Get all the arguments off of the command line, and put them in a
+     temporary file instead, separated by zeroes. This is because we
+     source the catkin workspace every time we run a ROS command, and
+     sourcing the workspace seems to break horribly whenever the
+     script has any arguments. I don't know why, it's an issue with
+     ROS; all I know is it causes massive problems that took weeks to
+     figure out.
+   - Take an educated guess at `ROS_IP` if it's not specified by a
+     command-line argument. ROS by default doesn't initialize `ROS_IP`
+     and uses hostnames instead; on the majority of networks (at
+     educational institutions at least) this doesn't work.
+   - Add `/bin` and `/sbin` to the `PATH`, and set the `SHELL`
+     variable to `/bin/sh`; this fixes behavior in some ROS packages
+     that make assumptions about these variables.
+   - Use `bwrap` (from nixpkgs) to enter the container, and call an
+     "inner wrapper" program.
+   - The inner wrapper, which now is in the container and has no
+     arguments, can safely source the container `setup` file. For
+     technical reasons relating to the script trying to set up
+     autocompletion thinking this is an interactive session, this
+     works better if the script is a `zsh` script than a `bash`
+     script, so the inner wrapper is actually a `zsh` script.
+   - Load the command-line arguments off of the temporary file that
+     they were dumped into before, and use them to execute the target
+     program.
+
+These four stages are more-or-less idempotent: after they are run
+once, they will be relatively quick to execute and not greatly change
+the system state. That being said, for efficiency, we only re-execute
+stage 2 and 3 when the generated scripts to do so change. Stage 1 is
+never re-executed once the system is initialized once; you can force
+it to be re-executed by doing `sudo rm -rf /var/ros`. Stage 4 is so
+fast we re-execute it every time.
+
+On non-NixOS targets using the `ros4nix` executable, the ROS core
+setup is implemented by tearing out the relevant section of the
+activation script into a standalone executable and calling it after
+building the system.
+
+## ROS Services
+
+The services setup provides the option `services.ros.enable` that
+starts up a ROS master (assuming `programs.ros.master` doesn't specify
+that a remote node is running the ROS master), a notoriously tricky
+service to get right. Beyond this, it provides options `runServices`
+and `launchServices` that take ROS-specific options and will use
+`rosrun` and `roslaunch`, respectively, to start up nodes after the
+ROS master has started. The commands are mapped to systemd services
+starting with the string `ros-`.
+
+On non-NixOS targets using the `ros4nix` executable, this setup works
+by building the target system's `/etc/systemd/system` directory, then
+copying the generated service files that all start with `ros-` out
+into the main host's `/etc/systemd/system` directory, then using
+`systemctl` to enable and start them.
