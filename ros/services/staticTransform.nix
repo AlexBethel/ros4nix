@@ -19,17 +19,17 @@ let rosLib = import ./rosLib.nix { inherit lib; }; in
 
           x = mkOption {
             description = "X offset.";
-            type = types.float;
+            type = types.number;
             default = 0.0;
           };
           y = mkOption {
             description = "Y offset.";
-            type = types.float;
+            type = types.number;
             default = 0.0;
           };
           z = mkOption {
             description = "Z offset.";
-            type = types.float;
+            type = types.number;
             default = 0.0;
           };
 
@@ -47,17 +47,17 @@ let rosLib = import ./rosLib.nix { inherit lib; }; in
           # coordinate system.
           roll = mkOption {
             description = "Roll offset (degrees).";
-            type = types.float;
+            type = types.number;
             default = 0.0;
           };
           pitch = mkOption {
             description = "Pitch offset (degrees).";
-            type = types.float;
+            type = types.number;
             default = 0.0;
           };
           yaw = mkOption {
             description = "Yaw offset (degrees).";
-            type = types.float;
+            type = types.number;
             default = 0.0;
           };
         };
