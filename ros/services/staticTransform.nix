@@ -73,7 +73,7 @@ let rosLib = import ./rosLib.nix { inherit lib; }; in
         (
           { parent, child, x, y, z, roll, pitch, yaw }:
           let
-            toRad = deg: deg / 180 * 3.14159265;
+            toRad = deg: deg / 180.0 * 3.14159265;
             rollRad = toRad roll;
             pitchRad = toRad pitch;
             yawRad = toRad yaw;
