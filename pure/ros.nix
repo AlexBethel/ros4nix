@@ -43,7 +43,7 @@ let
     {
       listing = fetchurl {
         url = "http://packages.ros.org/ros/ubuntu/lists/ros-noetic-focal-amd64_focal_main_amd64_Packages";
-        sha256 = "sha256-znQDy5Nd/2Bp4MIJjoyQiLjKyL0vCFHK5d8/nzQvSEk=";
+        sha256 = "0ja85ws9ygyzwp55221gpp4cmf48j268w2f2w1ln1zsxjg5h6x6f";
       };
       prefix = "http://packages.ros.org/ros/ubuntu/";
     }
@@ -51,7 +51,7 @@ let
     {
       listing = fetchurl {
         url = "http://archive.ubuntu.com/ubuntu/dists/focal/main/binary-amd64/Packages.xz";
-        sha256 = "sha256-d1eSH/j+7Zw5NKDJk21EG6SiOL7j6myMHfXLzUP8mGE=";
+        sha256 = "0qcqzi1wvjzm3n66rsp3pqwa590v8inr7jd06hwrrvgyz0gr4mvp";
       };
       prefix = "http://archive.ubuntu.com/ubuntu/";
     }
@@ -59,7 +59,7 @@ let
     {
       listing = fetchurl {
         url = "http://archive.ubuntu.com/ubuntu/dists/focal/universe/binary-amd64/Packages.xz";
-        sha256 = "sha256-RqdG2seJvZU3rKVNsWgLnf9RwkgVMRE1A4IZnX2WudE=";
+        sha256 = "1ldrjryrs6c20csi2c8m93153zwx1dlb2kd5mhvrbgc9qzd4d9s6";
       };
       prefix = "http://archive.ubuntu.com/ubuntu/";
     }
@@ -67,7 +67,7 @@ let
     {
       listing = fetchurl {
         url = "http://archive.ubuntu.com/ubuntu/dists/focal/multiverse/binary-amd64/Packages.xz";
-        sha256 = "sha256-IzdXt99o4WwYzK1hL/E6i7aPw2rG018TQnyv1w2LXUI=";
+        sha256 = "0hjxic6xgbvw889mzly6db1qzdlb7bqjyqddrhc6rqb8vyvmfdr3";
       };
       prefix = "http://archive.ubuntu.com/ubuntu/";
     }
