@@ -1,0 +1,16 @@
+<launch>
+    <!-- Load parameters for motor_ctrl_node -->
+    <rosparam file="$(find motor_ctrl)/config/motor_ctrl_config.yaml" command="load"/>
+
+    <!-- Run the motor_ctrl_node -->
+    <node name="motor_ctrl_node" pkg="motor_ctrl" type="motor_ctrl_node" output="screen"/>
+
+    <!-- Run the can_raw_node -->
+    <node name="can_raw_node" pkg="can_raw" type="can_raw_node" output="screen"/>
+
+    <!-- Three guesses what this one does... -->
+    <node name="can_raw_input_node" pkg="can_raw_input" type="can_raw_input_node" output="screen" />
+
+    <node name="can_convert_node" pkg="can_convert" type="can_convert_node" output="screen" />
+</launch>
+

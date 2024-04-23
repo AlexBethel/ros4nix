@@ -1,0 +1,7 @@
+---
+BasedOnStyle:  LLVM
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: false
+BreakBeforeBraces: Allman
+ColumnLimit:     100
+IndentWidth:     4

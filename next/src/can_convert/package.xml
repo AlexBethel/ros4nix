@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>can_convert</name>
+  <version>0.0.1</version>
+  <description>The can_convert package</description>
+
+  <maintainer email="niallcdevlin@gmail.com">Niall Devlin</maintainer>
+  <license>GPLv3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>can_raw</build_depend>  <!-- Replace with actual package name -->
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>can_raw</exec_depend>  <!-- Replace with actual package name -->
+
+</package>
+

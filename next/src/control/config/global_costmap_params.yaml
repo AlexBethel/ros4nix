@@ -1,0 +1,20 @@
+# Global navigation cost-map configuration parameters.
+
+global_costmap:
+  global_frame: map 
+  robot_base_frame: base_link
+  update_frequency: 5
+  rolling_window: true
+  always_send_full_costmap: true
+  map_type: costmap
+  resolution: 0.1
+  obstacle_range: 10
+  # Use `static_map` because the map here is maintained by a map
+  # server node.
+  # Don't want a static map for SLAM. 
+  # map_topic: "/map"
+  static_map: false
+  # plugins:
+  #   - {name: inflation, type:"costmap_2d::InflationLayer"}
+  #   - {name: obstacle, type:"costmap_2d::ObstacleLayer"}
+  #   - {name: static_layer, type:"costmap_2d::StaticLayer"}

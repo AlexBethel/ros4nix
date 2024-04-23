@@ -1,0 +1,5 @@
+static_layer:
+    map_topic: "/map"
+    first_map_only: false
+    lethal_cost_threshold: 50
+

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>can_raw</name>
+  <version>0.0.0</version>
+  <description>The can_raw package</description>
+
+  <maintainer email="alex@todo.todo">alex</maintainer>
+
+  <license>GPLv3</license>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+</package>

@@ -1,0 +1,40 @@
+# Configuration for the cost map. See
+# https://wiki.ros.org/navigation/Tutorials/RobotSetup.
+
+# Include objects that are 2.5 meters away in the local cost map.
+obstacle_range: 6
+# transform_tolerance: 30
+# Raytrace free space to 3 meters. TODO: what does this mean?
+raytrace_range: 8
+
+# Convex hull of the robot, in meters.
+# TODO: Can we get this from the URDF?
+
+footprint: [[-0.2, -0.14], [0.2, -0.14], [-0.2, 0.14], [0.2, 0.14]]
+
+# robot_radius: 0.2
+inflation_radius: 0.2
+plugins:
+ -
+   name: static_layer
+   type: "costmap_2d::StaticLayer"
+ # - 
+ #   name: inflater
+ #   type: "costmap_2d::InflationLayer"
+
+static_layer:
+  map_topic: "map"
+  lethal_cost_threshold: 20
+ # - 
+ #   name: obstacles
+ #   type: "costmap_2d::ObstacleLayer"
+# plugins:
+  # - {name: inflation, type:"costmap_2d::InflationLayer"}
+  # - {name: obstacle, type:"costmap_2d::ObstacleLayer"}
+  # - {name: static_layer, type:"costmap_2d::StaticLayer"}
+
+# From https://answers.ros.org/question/293696/move_base-to-use-map-published-on-a-certain-topic/
+# plugins:
+# dwa_local_planner::DWAPlannerROS
+#   - {name: inflation, type:"costmap_2d::InflationLayer"}
+#   - {name: static_layer, type:"costmap_2d::StaticLayer"}

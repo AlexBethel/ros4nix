@@ -1,0 +1,4 @@
+joy_topic: "joy_teleop/joy"
+actuator_max_vel: 5           # in mm/s
+bucket_axis: 3
+arm_axis: 4

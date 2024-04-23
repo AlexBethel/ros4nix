@@ -1,0 +1,8 @@
+<launch>
+    <!-- Load parameters for actuator_ctrl_node -->
+    <rosparam file="$(find actuator_ctrl)/config/actuator_ctrl_config.yaml" command="load"/>
+
+    <!-- Run the actuator_ctrl_node -->
+    <node name="actuator_ctrl_node" pkg="actuator_ctrl" type="actuator_ctrl_node" output="screen"/>
+</launch>
+

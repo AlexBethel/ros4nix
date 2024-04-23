@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="test_map">
+
+    <!-- Properties for Joint Transforms -->
+    <xacro:property name="odom_to_link_tf" value="t265_odom_frame"/>
+    <xacro:property name="link_frame" value="t265_link"/>
+    <xacro:property name="base_link_frame" value="base_link"/>
+    <xacro:property name="d455_frame" value="d455_link"/>
+
+    <!-- Transform values: [x, y, z, roll, pitch, yaw] -->
+    <xacro:property name="link_to_base_transform" value="[0, 0, 0, 0, 0, 0]"/>
+    <xacro:property name="link_to_d455_transform" value="[0.04, 0, 0.09, 0, 0.3, 3.14]"/>
+
+    <!-- t265_odom_frame to t265_link transform -->
+    <!-- This transform will be provided by the T265 tracking camera -->
+    <link name="${odom_to_link_tf}"/>
+    <link name="${link_frame}"/>
+    <joint name="${odom_to_link_tf}_to_${link_frame}_joint" type="floating">
+        <parent link="${odom_to_link_tf}"/>
+        <child link="${link_frame}"/>
+    </joint>
+
+    <!-- t265_link to base_link transform -->
+    <link name="${base_link_frame}"/>
+    <joint name="${link_frame}_to_${base_link_frame}_joint" type="fixed">
+        <origin xyz="0 0 0"
+                rpy="0 0 0"/>
+        <parent link="${link_frame}"/>
+        <child link="${base_link_frame}"/>
+    </joint>
+
+    <!-- t265_link to d455_link transform -->
+    <link name="${d455_frame}"/>
+    <joint name="${link_frame}_to_${d455_frame}_joint" type="fixed">
+        <origin xyz="0.045 0 0.09"
+                rpy="0 0.3 0"/>
+        <parent link="${link_frame}"/>
+        <child link="${d455_frame}"/>
+    </joint>
+
+</robot>
+

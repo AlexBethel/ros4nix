@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>control</name>
+  <version>0.0.1</version>
+  <description>A ROS package for control functionalities.</description>
+
+  <!-- One or more maintainers. Replace with your name and email -->
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+
+  <!-- One or more authors. Optional, but recommended. Replace with your name -->
+  <author email="your_email@example.com">Your Name</author>
+
+  <!-- License of this package. Replace with your chosen license -->
+  <license>TODO: License declaration</license>
+
+  <!-- Url tags are optional, but useful for linking source code, bug trackers, etc. -->
+  <url type="website">http://wiki.ros.org/control</url>
+  <url type="repository">URL to your repository</url>
+  <url type="bugtracker">URL to your bug tracker</url>
+
+  <!-- Dependencies on other ROS packages. Add/remove as needed -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <!-- If your package has tests, add test dependencies here -->
+
+  <!-- If your package has documentation, add documentation dependencies here -->
+
+</package>
+

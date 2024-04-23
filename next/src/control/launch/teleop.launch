@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="joystick" default="true" />
+
+  <group ns="joy_teleop" if="$(arg joystick)">
+    <rosparam command="load" file="$(find control)/config/teleop_logitech.yaml" />
+    <param name="joy_node/dev" value="$(arg joy_dev)" />
+
+    <node pkg="joy" type="joy_node" name="joy_node" if="$(arg joystick)" />
+    <node pkg="teleop_twist_joy" type="teleop_node" name="teleop_twist_joy"/>
+  </group>
+
+  <group ns="kb_teleop" unless="$(arg joystick)" >
+    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_kb" />
+  </group>
+
+  <node pkg="heartbeat" type="heartbeat_server_node" name="heartbeat_server_node" />
+
+  <node pkg="hud" type="hud_node" name="hud_node">
+    <param name="image_transport" value="theora" />
+  </node>
+
+  <!-- param name="image" value="camera_hud" />
+  <param name="image_transport" value="theora" />
+  <node pkg="image_view" type="image_view" name="image_view" output="screen">
+  </node -->
+
+</launch>
