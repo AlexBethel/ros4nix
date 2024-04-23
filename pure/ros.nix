@@ -127,6 +127,14 @@ let
       echo "#!/bin/sh" > $target
       echo "${debEnv.enterScript}/bin/deb-env -b ${combinedPackages}:/build ${enterScriptWrapper} /bin/bash \"\$@\"" >> $target
       chmod 755 $target
+
+      # Link in the sysroot and the combined packages for convenience,
+      # and provide a compile_flags.txt for clangd.
+      ln -s ${debEnv.root} $out/sysroot
+      ln -s ${combinedPackages} $out/packages
+      echo "-I${debEnv.root}/opt/ros/noetic/include" >> $out/compile_flags.txt
+      echo "-I${boost.dev}/include" >> $out/compile_flags.txt
+      echo "-I${combinedPackages}/install/include" >> $out/compile_flags.txt
     '';
 
   buildRosPackage = package:
