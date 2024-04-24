@@ -254,6 +254,8 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                   then [ "rosMaster.service" ]
                   else [ ];
 
+                serviceConfig = { Restart = "always"; };
+
                 # TODO: we should use namespace here somewhere.
                 script =
                   let
