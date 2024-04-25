@@ -294,7 +294,7 @@ case "$1" in
 
         . /etc/bashrc
         sys=$(build_system "$@")
-        echo 'OK'
+        echo "OK ($sys)"
         ;;
     boot)
         echo 'Not implemented'
