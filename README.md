@@ -1,3 +1,9 @@
+# NOTE
+
+Due to time constraints the repository currently contains a small
+amount of CAN code specific to NMT Lunabotics' 2024 robot. This
+repository currently should not be used for any other purpose.
+
 # ros4nix
 
 `ros4nix` is a program for managing ROS using Nix and NixOS. It is not
