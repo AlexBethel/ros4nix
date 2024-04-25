@@ -178,25 +178,11 @@ build_system () {
 # Stop and uninstall the currently installed ROS system units, if any
 # are present.
 uninstall_units () {
-    # Force actuators to stop on NMT Lunabotics robot as quickly as
-    # possible. The system will act unpredictably for the few moments
-    # it takes to shut down all the ROS services, so they might start
-    # again; safest to ask them to stop both before *and* after.
-    cansend can0 001#8000800000000000 || true
-    cansend can0 003#8080000000000000 || true
-    cansend can0 007#ffffffffffffffff || true # Turn on all lights
-
     echo 'Stopping all running ROS systemd units...'
     for file in /etc/systemd/system/ros*.service; do
         echo "Stopping $(basename "$file")..."
         sudo systemctl stop $(basename "$file")
     done
-
-    # Do it again, just in case. Past this point none of ROS's stuff
-    # is running so they can't possibly be started again.
-    cansend can0 001#8000800000000000 || true
-    cansend can0 003#8080000000000000 || true
-    cansend can0 007#ffffffffffffffff || true # Turn on all lights
 
     echo 'Disabling enabled ROS systemd units...'
     for file in /etc/systemd/system/ros*.service; do
