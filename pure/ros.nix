@@ -74,7 +74,7 @@ let
   ];
 
   mkDebEnv = extraInputs: import ./buildDebEnv.nix {
-    inherit debFilesAndPrefixes;
+    inherit pkgs debFilesAndPrefixes;
     debianPackages = neededPackages ++ extraInputs;
   };
 
