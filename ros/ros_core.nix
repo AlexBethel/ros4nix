@@ -117,6 +117,12 @@ with lib;
       description = "Paths to copy into /catkin_ws.";
     };
 
+    defaultWorkspace = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Path to the default catkin workspace.";
+    };
+
     master = mkOption {
       type = types.nullOr types.str;
       default = null;
@@ -190,6 +196,13 @@ with lib;
         #!${pkgs.zsh}/bin/zsh
 
         . /catkin_ws/devel/setup.zsh
+
+        ${
+          if config.programs.ros.defaultWorkspace != null
+            then ". ${config.programs.ros.defaultWorkspace}/devel/setup.zsh"
+            else ""
+        }
+
         if grep -qe 'catkin_ws' <<< "$PWD"
         then
             setup_path=$(echo "$PWD" | sed 's:/catkin_ws.*::')/catkin_ws/devel/setup.zsh
