@@ -6,11 +6,6 @@
   # `Packages` or `Packages.xz` file, and `prefix` is the prefix to
   # prepend to all download paths.
   debFilesAndPrefixes
-, # Function that takes the root directory and applies any finishing
-  # touches to it, returning a new root directory. If not supplied,
-  # this does nothing.
-  fixupRoot ? (x: x)
-,
 }:
 with pkgs;
 
