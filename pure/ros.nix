@@ -39,39 +39,83 @@ let
     "ros-noetic-ros-core"
   ];
 
-  debFilesAndPrefixes = [
-    {
-      listing = fetchurl {
-        url = "http://packages.ros.org/ros/ubuntu/lists/ros-noetic-focal-amd64_focal_main_amd64_Packages";
-        sha256 = "0ja85ws9ygyzwp55221gpp4cmf48j268w2f2w1ln1zsxjg5h6x6f";
-      };
-      prefix = "http://packages.ros.org/ros/ubuntu/";
-    }
+  debFilesAndPrefixes =
+    let
+      listings = {
+        x86_64 = [
+          {
+            listing = fetchurl {
+              url = "http://packages.ros.org/ros/ubuntu/lists/ros-noetic-focal-amd64_focal_main_amd64_Packages";
+              sha256 = "0ja85ws9ygyzwp55221gpp4cmf48j268w2f2w1ln1zsxjg5h6x6f";
+            };
+            prefix = "http://packages.ros.org/ros/ubuntu/";
+          }
 
-    {
-      listing = fetchurl {
-        url = "http://archive.ubuntu.com/ubuntu/dists/focal/main/binary-amd64/Packages.xz";
-        sha256 = "0qcqzi1wvjzm3n66rsp3pqwa590v8inr7jd06hwrrvgyz0gr4mvp";
-      };
-      prefix = "http://archive.ubuntu.com/ubuntu/";
-    }
+          {
+            listing = fetchurl {
+              url = "http://archive.ubuntu.com/ubuntu/dists/focal/main/binary-amd64/Packages.xz";
+              sha256 = "0qcqzi1wvjzm3n66rsp3pqwa590v8inr7jd06hwrrvgyz0gr4mvp";
+            };
+            prefix = "http://archive.ubuntu.com/ubuntu/";
+          }
 
-    {
-      listing = fetchurl {
-        url = "http://archive.ubuntu.com/ubuntu/dists/focal/universe/binary-amd64/Packages.xz";
-        sha256 = "1ldrjryrs6c20csi2c8m93153zwx1dlb2kd5mhvrbgc9qzd4d9s6";
-      };
-      prefix = "http://archive.ubuntu.com/ubuntu/";
-    }
+          {
+            listing = fetchurl {
+              url = "http://archive.ubuntu.com/ubuntu/dists/focal/universe/binary-amd64/Packages.xz";
+              sha256 = "1ldrjryrs6c20csi2c8m93153zwx1dlb2kd5mhvrbgc9qzd4d9s6";
+            };
+            prefix = "http://archive.ubuntu.com/ubuntu/";
+          }
 
-    {
-      listing = fetchurl {
-        url = "http://archive.ubuntu.com/ubuntu/dists/focal/multiverse/binary-amd64/Packages.xz";
-        sha256 = "0hjxic6xgbvw889mzly6db1qzdlb7bqjyqddrhc6rqb8vyvmfdr3";
+          {
+            listing = fetchurl {
+              url = "http://archive.ubuntu.com/ubuntu/dists/focal/multiverse/binary-amd64/Packages.xz";
+              sha256 = "0hjxic6xgbvw889mzly6db1qzdlb7bqjyqddrhc6rqb8vyvmfdr3";
+            };
+            prefix = "http://archive.ubuntu.com/ubuntu/";
+          }
+        ];
+
+        aarch64 = [
+          # N.B. Ubuntu refers to aarch64 as "arm64", and hosts its
+          # packages from "ports.ubuntu.com" as opposed to
+          # "archive.ubuntu.com"; and "ports.ubuntu.com" has its whole
+          # directory tree shifted up by one level.
+          {
+            listing = fetchurl {
+              url = "http://packages.ros.org/ros/ubuntu/lists/ros-noetic-focal-arm64_focal_main_arm64_Packages";
+              sha256 = "013na1k7dcjaa0xsi70m3gjiyflscdmjiyzjyxa1a78j4i7a05iy";
+            };
+            prefix = "http://packages.ros.org/ros/ubuntu/";
+          }
+
+          {
+            listing = fetchurl {
+              url = "http://ports.ubuntu.com/dists/focal/main/binary-arm64/Packages.xz";
+              sha256 = "06rc5vi3lpc4fxmz7fk9fx84cxzvrbs48kxrdkqhr30x090v4570";
+            };
+            prefix = "http://ports.ubuntu.com/";
+          }
+
+          {
+            listing = fetchurl {
+              url = "http://ports.ubuntu.com/dists/focal/universe/binary-arm64/Packages.xz";
+              sha256 = "18fzjgl3vw2rixd6xckyn7pixfmcndhj30kk6726mpwjrgisgq42";
+            };
+            prefix = "http://ports.ubuntu.com/";
+          }
+
+          {
+            listing = fetchurl {
+              url = "http://ports.ubuntu.com/dists/focal/multiverse/binary-arm64/Packages.xz";
+              sha256 = "1b8lsxrfx6q6f2q1y05vi7f73mz1dqvn112y09s3yn1k9cs7y06l";
+            };
+            prefix = "http://ports.ubuntu.com/";
+          }
+        ];
       };
-      prefix = "http://archive.ubuntu.com/ubuntu/";
-    }
-  ];
+    in
+    listings.${hostPlatform.uname.processor};
 
   mkDebEnv = extraInputs: import ./buildDebEnv.nix {
     inherit pkgs debFilesAndPrefixes;
@@ -151,7 +195,7 @@ let
         builtins.filter (pkg: pkg.isROSPackage or false)
           (package.buildInputs or [ ])
       );
-      myDebPkgs = package.extraDebPackages or [];
+      myDebPkgs = package.extraDebPackages or [ ];
       debPkgs = myDebPkgs ++ inputDebPkgs;
 
       debEnv = mkDebEnv debPkgs;
