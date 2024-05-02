@@ -77,7 +77,10 @@ let
     buildInputs = [ can_raw ];
   };
 in
-ros.withPackages [ ] [
+ros.withPackages [
+  "ros-noetic-apriltag-ros"
+  "ros-noetic-usb-cam"
+] [
   actuator_ctrl
   can_convert
   can_raw
