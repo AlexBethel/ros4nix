@@ -9,6 +9,7 @@
     ./messageLogger.nix
     ./motorCtrl.nix
     ./moveBase.nix
+    ./pointcloudConcatenate.nix
     ./realsense.nix
     ./rosbridge.nix
     ./staticTransform.nix
