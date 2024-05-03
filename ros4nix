@@ -158,7 +158,7 @@ install_system () {
     sudo $(which nix-env) -p /nix/var/nix/profiles/ros4nix --set "$build"
 
     echo 'Switching to configuration...'
-    uninstall_units
+    uninstall_units_changed
     activate_system
     load_units
     echo 'Activation done.'
@@ -192,6 +192,43 @@ uninstall_units () {
     echo 'Uninstalling ROS systemd units...'
     for file in /etc/systemd/system/ros*.service; do
         sudo rm -v $file
+    done
+}
+
+# Stop and uninstall the currently installed ROS system units, but
+# only the ones that changed.
+uninstall_units_changed () {
+    # TODO: refactor this without the crazy copy-pasting
+
+    echo 'Stopping changed ROS systemd units...'
+    for file in /etc/systemd/system/ros*.service; do
+        new_service=/nix/var/nix/profiles/ros4nix/etc/systemd/system/$(basename "$file")
+
+        # If the service has been removed OR changed, remove it.
+        if [ ! -e "$new_service" ] || ! diff "$new_service" "$file"; then
+            echo "Stopping $(basename "$file")..."
+            sudo systemctl stop $(basename "$file")
+        fi
+    done
+
+    echo 'Disabling enabled ROS systemd units...'
+    for file in /etc/systemd/system/ros*.service; do
+        new_service=/nix/var/nix/profiles/ros4nix/etc/systemd/system/$(basename "$file")
+
+        # If the service has been removed OR changed, remove it.
+        if [ ! -e "$new_service" ] || ! diff "$new_service" "$file"; then
+            sudo systemctl disable $(basename "$file")
+        fi
+    done
+
+    echo 'Uninstalling ROS systemd units...'
+    for file in /etc/systemd/system/ros*.service; do
+        new_service=/nix/var/nix/profiles/ros4nix/etc/systemd/system/$(basename "$file")
+
+        # If the service has been removed OR changed, remove it.
+        if [ ! -e "$new_service" ] || ! diff "$new_service" "$file"; then
+            sudo rm -v $file
+        fi
     done
 }
 
@@ -236,9 +273,11 @@ load_units () {
         # section of its services; it's not a problem on NixOS because
         # Nix installs services rather than systemd, so we're gonna
         # have to emulate Nix's behavior here instead.
-        sudo ln -s \
-             /etc/systemd/system/$(basename "$service") \
-             /etc/systemd/system/multi-user.target.wants/$(basename "$service")
+        if ! [ -e /etc/systemd/system/multi-user.target.wants/$(basename "$service") ]; then
+            sudo ln -s \
+                 /etc/systemd/system/$(basename "$service") \
+                 /etc/systemd/system/multi-user.target.wants/$(basename "$service")
+        fi
     done
 
     sudo systemctl daemon-reload
