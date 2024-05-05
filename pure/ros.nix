@@ -133,7 +133,7 @@ let
   '';
 
   # Build ROS wrappers with a set of Catkin packages.
-  rosWrappersWithPackages = debPkgs: packages:
+  rosWrappersWithPackages = packages:
     let
       combinedPackages = runCommand "combinedPackages" { } ''
         mkdir -p $out/install
@@ -146,7 +146,7 @@ let
         builtins.filter (pkg: pkg.isROSPackage or false)
           packages
       );
-      debEnv = mkDebEnv (debPkgs ++ requiredDebPkgs);
+      debEnv = mkDebEnv requiredDebPkgs;
     in
     runCommand "rosWrappers" { } ''
       mkdir -p $out/bin
