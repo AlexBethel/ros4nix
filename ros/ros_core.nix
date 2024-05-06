@@ -167,7 +167,7 @@ with lib;
                 /stage3
             fi
           '' else ''
-            PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc --bind /nix /nix /proc /init
+            PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --bind /nix /nix --dev /dev --proc /proc /init
             if [ -e /stage3 ]; then
                 PATH=/bin:/sbin ${pkgs.bubblewrap}/bin/bwrap --dev-bind ${config.programs.ros.rootDir} / --dev /dev --proc /proc --bind /nix /nix /stage3
             fi
