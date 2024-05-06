@@ -117,6 +117,12 @@ with lib;
       description = "Paths to copy into /catkin_ws.";
     };
 
+    extraInstallCommands = mkOption {
+      type = types.separatedString "\n";
+      default = "";
+      description = "Extra code to add on stage 2 installation.";
+    };
+
     defaultWorkspace = mkOption {
       type = types.nullOr types.str;
       default = null;
@@ -388,7 +394,7 @@ with lib;
             )
           ] ++
 
-          [ ]
+          [ config.programs.ros.extraInstallCommands ]
         );
       stage2Script = pkgs.writeScript "stage2" stage2Install;
 
