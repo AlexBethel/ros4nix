@@ -256,7 +256,6 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
 
                 serviceConfig = { Restart = "always"; };
 
-                # TODO: we should use namespace here somewhere.
                 script =
                   let
                     cdCommand =
@@ -268,11 +267,17 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                       then ''
                         ${config.programs.ros.rootDir}/nixWrappers/rosparam load ${rosParams} /${packageName}
                       '' else "";
+                    namespaceCommand =
+                      if namespace != null
+                      then ''
+                        export ROS_NAMESPACE=${namespace}
+                      '' else "";
                     opts = concatStringsSep " " rawArgs + rosLib.attrsToCmdLine remap;
                   in
                   ''
                     ${cdCommand}
                     ${paramsCommand}
+                    ${namespaceCommand}
                     ${config.programs.ros.rootDir}/nixWrappers/rosrun ${packageName} ${executable} ${opts}
                   '';
               };
