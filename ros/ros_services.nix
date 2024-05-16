@@ -262,10 +262,14 @@ let rosLib = import ./services/rosLib.nix { inherit lib; }; in
                       if workspace != null
                       then "cd ${workspace}"
                       else "";
+                    namespacePackage =
+                      if namespace != ""
+                      then "/${namespace}/${packageName}"
+                      else "/${packageName}";
                     paramsCommand =
                       if rosParams != null
                       then ''
-                        ${config.programs.ros.rootDir}/nixWrappers/rosparam load ${rosParams} /${packageName}
+                        ${config.programs.ros.rootDir}/nixWrappers/rosparam load ${rosParams} /${namespacePackage}
                       '' else "";
                     namespaceCommand =
                       if namespace != null
