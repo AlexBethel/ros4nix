@@ -1,5 +1,15 @@
 # ros4nix
 
+*This program is no longer actively developed, and its use is not
+recommended.* This is the software deployment system developed for NMT
+Lunabotics in 2024; however, it suffers from purity problems and
+usability issues, and its port from NixOS to other operating systems
+was always super hacky. As it stands I'm not using ROS for any major
+projects, so for the time being I'm no longer working on this
+repository.
+
+----------------------------------------------------------------------
+
 `ros4nix` is a program for managing ROS using Nix and NixOS. It is not
 a direct *port*, per se, of ROS to Nix, as no ROS software ever gets
 compiled or downloaded into the Nix store itself; rather, it manages a
