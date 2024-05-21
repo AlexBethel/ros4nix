@@ -1,7 +1,7 @@
 # ros4nix
 
-*This program is no longer actively developed, and its use is not
-recommended.* This is the software deployment system developed for NMT
+**This program is no longer actively developed, and its use is not
+recommended.** This is the software deployment system developed for NMT
 Lunabotics in 2024; however, it suffers from purity problems and
 usability issues, and its port from NixOS to other operating systems
 was always super hacky. As it stands I'm not using ROS for any major
